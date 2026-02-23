@@ -107,7 +107,6 @@ jobs:
                       "query": q,
                   })
 
-          # De-dupe by link (fallback to headline+pubDate)
           seen = set()
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
@@ -143,26 +142,33 @@ jobs:
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
         run: |
           python3 - << 'PY'
-          import os, json, time
+          import os, json, re, time
           import requests
 
-          # --- Read & sanitize secrets ---
-          token = (os.environ.get("NOTION_TOKEN") or "").strip()
-          token = token.replace("\n", "").replace("\r", "").replace("\t", "")
-          db_id = (os.environ.get("NOTION_DATABASE_ID") or "").strip().replace("-", "")
-          db_id = db_id.replace("\n", "").replace("\r", "").replace("\t", "")
+          def clean_secret(s: str) -> str:
+              s = (s or "")
+              s = s.strip()
+              s = s.strip('"').strip("'")
+              s = s.replace("\n", "").replace("\r", "").replace("\t", "").strip()
+              return s
+
+          token = clean_secret(os.environ.get("NOTION_TOKEN"))
+          db_raw = clean_secret(os.environ.get("NOTION_DATABASE_ID")).replace("-", "")
 
           if not token:
               raise RuntimeError("Missing GitHub secret: NOTION_TOKEN")
-          if not db_id:
+          if not db_raw:
               raise RuntimeError("Missing GitHub secret: NOTION_DATABASE_ID")
 
-          # If token still contains spaces/quotes, fail clearly (this is your current issue)
-          if any(ch.isspace() for ch in token) or token.startswith(("'", '"')) or token.endswith(("'", '"')):
+          # Validate DB id is 32 hex
+          if not re.fullmatch(r"[0-9a-fA-F]{32}", db_raw):
               raise RuntimeError(
-                  "NOTION_TOKEN looks malformed (contains whitespace or quotes). "
-                  "Edit the GitHub secret and paste the Notion Internal Integration Token as ONE single line, no quotes."
+                  f"NOTION_DATABASE_ID is not a 32-hex database id after cleaning. "
+                  f"Got length={len(db_raw)}. Use ONLY the id (e.g. 310ebf7ff2a68067999bf025950fbc70), no URL, no v=."
               )
+
+          # Canonical UUID with hyphens (Notion always accepts this)
+          db_id = f"{db_raw[0:8]}-{db_raw[8:12]}-{db_raw[12:16]}-{db_raw[16:20]}-{db_raw[20:32]}"
 
           headers = {
               "Authorization": f"Bearer {token}",
@@ -170,36 +176,38 @@ jobs:
               "Content-Type": "application/json",
           }
 
-          # --- Load local feed.json produced above ---
+          # Preflight: confirm this id is a DATABASE and that the integration can access it
+          pre = requests.get(f"https://api.notion.com/v1/databases/{db_id}", headers=headers, timeout=30)
+          if pre.status_code != 200:
+              raise RuntimeError(
+                  f"Notion preflight failed (GET /databases/<id>): status={pre.status_code}\n{pre.text}\n"
+                  f"Fix: ensure the integration has access to the database, and NOTION_DATABASE_ID is the database id."
+              )
+
           with open("feed.json", "r", encoding="utf-8") as f:
               feed = json.load(f)
           items = feed.get("items", [])
 
-          # --- Fetch existing URLs from Notion efficiently (few API calls) ---
+          # Pull existing URLs from Notion (few calls)
           existing_urls = set()
           start_cursor = None
-          max_pages = 30  # safety limit (up to 3000 rows)
-          for _ in range(max_pages):
+          for _ in range(50):
               payload = {"page_size": 100}
               if start_cursor:
                   payload["start_cursor"] = start_cursor
-
               r = requests.post(
                   f"https://api.notion.com/v1/databases/{db_id}/query",
                   headers=headers,
                   json=payload,
-                  timeout=30,
+                  timeout=30
               )
-              r.raise_for_status()
+              if r.status_code != 200:
+                  raise RuntimeError(f"Notion query failed: status={r.status_code}\n{r.text}")
               data = r.json()
-
               for page in data.get("results", []):
-                  props = page.get("properties", {})
-                  url_prop = props.get("URL", {})
-                  u = url_prop.get("url")
+                  u = (page.get("properties", {}).get("URL", {}) or {}).get("url")
                   if u:
                       existing_urls.add(u)
-
               if not data.get("has_more"):
                   break
               start_cursor = data.get("next_cursor")
@@ -215,7 +223,7 @@ jobs:
               query = (it.get("query") or "")[:200]
               iso = it.get("pubDateISO")
 
-              # NOTE: property names must match your Notion DB exactly:
+              # Property names must match your DB exactly:
               # Name (title), URL (url), DATE (date), Source (rich_text), Query (rich_text)
               props = {
                   "Name": {"title": [{"text": {"content": title}}]},
@@ -226,19 +234,14 @@ jobs:
               if isinstance(iso, str) and "T" in iso:
                   props["DATE"] = {"date": {"start": iso}}
 
-              payload = {"parent": {"database_id": db_id}, "properties": props}
-
-              r = requests.post(
-                  "https://api.notion.com/v1/pages",
-                  headers=headers,
-                  json=payload,
-                  timeout=30,
-              )
-              r.raise_for_status()
+              create_payload = {"parent": {"database_id": db_id}, "properties": props}
+              c = requests.post("https://api.notion.com/v1/pages", headers=headers, json=create_payload, timeout=30)
+              if c.status_code != 200:
+                  raise RuntimeError(f"Notion create failed: status={c.status_code}\n{c.text}")
 
               existing_urls.add(url)
               created += 1
-              time.sleep(0.35)  # stay under Notion rate limit
+              time.sleep(0.35)
 
-          print(f"Notion sync complete: created={created}, already_present={len(existing_urls) - created}")
+          print(f"Notion sync complete: created={created}, existing={len(existing_urls)}")
           PY
