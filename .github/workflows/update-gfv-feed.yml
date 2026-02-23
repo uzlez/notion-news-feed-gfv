@@ -1,4 +1,5 @@
 name: Update feed.json (GFV mentions)
+
 on:
   workflow_dispatch:
   schedule:
@@ -28,7 +29,6 @@ jobs:
           GL = "GB"
           CEID = "GB:en"
 
-          # Primary keywords (tuned to reduce noise from unrelated "GFV" meanings)
           QUERIES = [
               '"Green Flag Ventures"',
               '"Justin Zeefe"',
@@ -49,7 +49,6 @@ jobs:
               return s
 
           def parse_pubdate(s: str):
-              # Google News RSS typically uses RFC822-like format
               for fmt in ("%a, %d %b %Y %H:%M:%S %Z", "%a, %d %b %Y %H:%M:%S %z"):
                   try:
                       dt = datetime.strptime(s, fmt)
@@ -62,7 +61,6 @@ jobs:
 
           items = []
           for q in QUERIES:
-              # Adding after:cutoff_date improves recall, but we still filter by pubDate below.
               q2 = f"{q} after:{cutoff_date}"
               url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({
                   "q": q2,
@@ -94,18 +92,20 @@ jobs:
                   if not dt or dt < cutoff:
                       continue
 
+                  # Add query string so we can store it in Notion
                   items.append({
                       "headline": title,
                       "source": source,
                       "link": link,
                       "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+                      "pubDateISO": dt.isoformat(),  # handy for Notion DATE
                       "snippet": desc,
+                      "query": q,
                   })
 
-          # De-dupe by link (fallback to headline+pubDate)
           seen = set()
           out = []
-          for x in sorted(items, key=lambda z: z["pubDate"], reverse=True):
+          for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
               key = x["link"] or (x["headline"] + "|" + x["pubDate"])
               if key in seen:
                   continue
@@ -128,3 +128,83 @@ jobs:
           git add feed.json
           git commit -m "Update feed.json" || exit 0
           git push
+
+      # --- NEW: push items into Notion database ---
+      - name: Install Python deps
+        run: pip3 install requests
+
+      - name: Sync feed.json to Notion database
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: |
+          python3 - << 'PY'
+          import os, json, time
+          import requests
+          from datetime import datetime, timezone
+
+          TOKEN = os.environ["NOTION_TOKEN"]
+          DB_ID = os.environ["NOTION_DATABASE_ID"].replace("-", "")
+
+          headers = {
+            "Authorization": f"Bearer {TOKEN}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          }
+
+          with open("feed.json", "r", encoding="utf-8") as f:
+            feed = json.load(f)
+
+          items = feed.get("items", [])
+          created = 0
+          skipped = 0
+
+          def query_exists(url: str) -> bool:
+            payload = {
+              "page_size": 1,
+              "filter": {
+                "property": "URL",
+                "url": {"equals": url}
+              }
+            }
+            r = requests.post(f"https://api.notion.com/v1/databases/{DB_ID}/query",
+                              headers=headers, json=payload, timeout=30)
+            r.raise_for_status()
+            return len(r.json().get("results", [])) > 0
+
+          for it in items:
+            url = it.get("link")
+            if not url:
+              continue
+
+            if query_exists(url):
+              skipped += 1
+              continue
+
+            title = (it.get("headline") or "Untitled")[:180]
+            source = (it.get("source") or "")[:200]
+            query = (it.get("query") or "")[:200]
+            iso = it.get("pubDateISO")  # already ISO8601
+
+            props = {
+              "Name": {"title": [{"text": {"content": title}}]},
+              "URL": {"url": url},
+              "Source": {"rich_text": [{"text": {"content": source}}]} if source else {"rich_text": []},
+              "Query": {"rich_text": [{"text": {"content": query}}]} if query else {"rich_text": []},
+            }
+
+            # DATE is optional, but nice
+            if isinstance(iso, str) and "T" in iso:
+              props["DATE"] = {"date": {"start": iso}}
+
+            payload = {"parent": {"database_id": DB_ID}, "properties": props}
+            r = requests.post("https://api.notion.com/v1/pages",
+                              headers=headers, json=payload, timeout=30)
+            r.raise_for_status()
+            created += 1
+
+            # rate-limit friendly
+            time.sleep(0.35)
+
+          print(f"Notion sync done. created={created}, skipped_existing={skipped}")
+          PY
