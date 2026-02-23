@@ -1,1 +1,1 @@
-# notion-news-feed-gfv
+# notion-news-feed
