@@ -26,6 +26,7 @@ jobs:
           import json, re, urllib.parse, urllib.request
           import xml.etree.ElementTree as ET
           from datetime import datetime, timezone, timedelta
+          from email.utils import parsedate_to_datetime
 
           MAX_ITEMS = 200
           MAX_AGE_DAYS = 180
@@ -54,15 +55,13 @@ jobs:
               return s
 
           def parse_pubdate(s: str):
-              for fmt in ("%a, %d %b %Y %H:%M:%S %Z", "%a, %d %b %Y %H:%M:%S %z"):
-                  try:
-                      dt = datetime.strptime(s, fmt)
-                      if dt.tzinfo is None:
-                          dt = dt.replace(tzinfo=timezone.utc)
-                      return dt.astimezone(timezone.utc)
-                  except Exception:
-                      pass
-              return None
+              try:
+                  dt = parsedate_to_datetime(s)
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  return dt.astimezone(timezone.utc)
+              except Exception:
+                  return None
 
           items = []
           for q in QUERIES:
@@ -73,6 +72,7 @@ jobs:
                   "gl": GL,
                   "ceid": CEID,
               })
+
               try:
                   with urllib.request.urlopen(url, timeout=30) as resp:
                       xml = resp.read()
@@ -107,6 +107,7 @@ jobs:
                       "query": q,
                   })
 
+          # De-dupe by link (fallback to headline+pubDate)
           seen = set()
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
@@ -126,22 +127,15 @@ jobs:
           PY
 
       - name: Commit feed.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Commit generated changes first (avoids "unstaged changes" rebase error)
-          git add feed.json
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "Update feed.json"
-
-          # Rebase on latest remote main and push
-          git fetch origin main
-          git rebase origin/main
-          git push || (git fetch origin main && git rebase origin/main && git push)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update feed.json"
+          file_pattern: "feed.json"
 
       - name: Install Python deps
-        run: pip3 install requests
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install requests
 
       - name: Sync feed.json to Notion database
         env:
@@ -152,48 +146,68 @@ jobs:
           import os, json, time
           import requests
 
-          TOKEN = os.environ.get("NOTION_TOKEN", "")
-          DB_ID = os.environ.get("NOTION_DATABASE_ID", "").replace("-", "")
+          # --- Read & sanitize secrets ---
+          token = (os.environ.get("NOTION_TOKEN") or "").strip()
+          token = token.replace("\n", "").replace("\r", "").replace("\t", "")
+          db_id = (os.environ.get("NOTION_DATABASE_ID") or "").strip().replace("-", "")
+          db_id = db_id.replace("\n", "").replace("\r", "").replace("\t", "")
 
-          if not TOKEN:
+          if not token:
               raise RuntimeError("Missing GitHub secret: NOTION_TOKEN")
-          if not DB_ID:
+          if not db_id:
               raise RuntimeError("Missing GitHub secret: NOTION_DATABASE_ID")
 
+          # If token still contains spaces/quotes, fail clearly (this is your current issue)
+          if any(ch.isspace() for ch in token) or token.startswith(("'", '"')) or token.endswith(("'", '"')):
+              raise RuntimeError(
+                  "NOTION_TOKEN looks malformed (contains whitespace or quotes). "
+                  "Edit the GitHub secret and paste the Notion Internal Integration Token as ONE single line, no quotes."
+              )
+
           headers = {
-              "Authorization": f"Bearer {TOKEN}",
+              "Authorization": f"Bearer {token}",
               "Notion-Version": "2022-06-28",
               "Content-Type": "application/json",
           }
 
+          # --- Load local feed.json produced above ---
           with open("feed.json", "r", encoding="utf-8") as f:
               feed = json.load(f)
-
           items = feed.get("items", [])
-          created = 0
-          skipped = 0
 
-          def query_exists(url: str) -> bool:
-              payload = {
-                  "page_size": 1,
-                  "filter": {"property": "URL", "url": {"equals": url}},
-              }
+          # --- Fetch existing URLs from Notion efficiently (few API calls) ---
+          existing_urls = set()
+          start_cursor = None
+          max_pages = 30  # safety limit (up to 3000 rows)
+          for _ in range(max_pages):
+              payload = {"page_size": 100}
+              if start_cursor:
+                  payload["start_cursor"] = start_cursor
+
               r = requests.post(
-                  f"https://api.notion.com/v1/databases/{DB_ID}/query",
+                  f"https://api.notion.com/v1/databases/{db_id}/query",
                   headers=headers,
                   json=payload,
                   timeout=30,
               )
               r.raise_for_status()
-              return len(r.json().get("results", [])) > 0
+              data = r.json()
 
+              for page in data.get("results", []):
+                  props = page.get("properties", {})
+                  url_prop = props.get("URL", {})
+                  u = url_prop.get("url")
+                  if u:
+                      existing_urls.add(u)
+
+              if not data.get("has_more"):
+                  break
+              start_cursor = data.get("next_cursor")
+
+          created = 0
           for it in items:
               url = it.get("link")
-              if not url:
-                  continue
-
-              if query_exists(url):
-                  skipped += 1
+              if not url or url in existing_urls:
                   continue
 
               title = (it.get("headline") or "Untitled")[:180]
@@ -201,18 +215,19 @@ jobs:
               query = (it.get("query") or "")[:200]
               iso = it.get("pubDateISO")
 
+              # NOTE: property names must match your Notion DB exactly:
+              # Name (title), URL (url), DATE (date), Source (rich_text), Query (rich_text)
               props = {
                   "Name": {"title": [{"text": {"content": title}}]},
                   "URL": {"url": url},
                   "Source": {"rich_text": [{"text": {"content": source}}]} if source else {"rich_text": []},
                   "Query": {"rich_text": [{"text": {"content": query}}]} if query else {"rich_text": []},
               }
-
-              # Your Notion column is called DATE (case-sensitive)
               if isinstance(iso, str) and "T" in iso:
                   props["DATE"] = {"date": {"start": iso}}
 
-              payload = {"parent": {"database_id": DB_ID}, "properties": props}
+              payload = {"parent": {"database_id": db_id}, "properties": props}
+
               r = requests.post(
                   "https://api.notion.com/v1/pages",
                   headers=headers,
@@ -221,8 +236,9 @@ jobs:
               )
               r.raise_for_status()
 
+              existing_urls.add(url)
               created += 1
-              time.sleep(0.35)  # rate-limit friendly
+              time.sleep(0.35)  # stay under Notion rate limit
 
-          print(f"Notion sync done. created={created}, skipped_existing={skipped}")
+          print(f"Notion sync complete: created={created}, already_present={len(existing_urls) - created}")
           PY
