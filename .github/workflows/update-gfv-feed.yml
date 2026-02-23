@@ -5,7 +5,6 @@ on:
   schedule:
     - cron: "*/30 * * * *"
 
-# Prevent overlapping runs that fight over pushing commits
 concurrency:
   group: notion-news-feed-gfv
   cancel-in-progress: true
@@ -31,7 +30,6 @@ jobs:
           MAX_ITEMS = 200
           MAX_AGE_DAYS = 180
 
-          # Prefer UK English results (adjust if you want)
           HL = "en-GB"
           GL = "GB"
           CEID = "GB:en"
@@ -109,7 +107,6 @@ jobs:
                       "query": q,
                   })
 
-          # De-dupe by link (fallback to headline+pubDate)
           seen = set()
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
@@ -129,21 +126,19 @@ jobs:
           PY
 
       - name: Commit feed.json
-  run: |
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    # Stage + commit the generated file first
-    git add feed.json
-    git diff --cached --quiet && echo "No changes to commit" && exit 0
-    git commit -m "Update feed.json"
+          # Commit generated changes first (avoids "unstaged changes" rebase error)
+          git add feed.json
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update feed.json"
 
-    # Now bring in any remote changes and replay our commit on top
-    git fetch origin main
-    git rebase origin/main
-
-    # Push; if someone pushed again while we were rebasing, retry once
-    git push || (git fetch origin main && git rebase origin/main && git push)
+          # Rebase on latest remote main and push
+          git fetch origin main
+          git rebase origin/main
+          git push || (git fetch origin main && git rebase origin/main && git push)
 
       - name: Install Python deps
         run: pip3 install requests
@@ -161,65 +156,73 @@ jobs:
           DB_ID = os.environ.get("NOTION_DATABASE_ID", "").replace("-", "")
 
           if not TOKEN:
-            raise RuntimeError("Missing GitHub secret: NOTION_TOKEN")
+              raise RuntimeError("Missing GitHub secret: NOTION_TOKEN")
           if not DB_ID:
-            raise RuntimeError("Missing GitHub secret: NOTION_DATABASE_ID")
+              raise RuntimeError("Missing GitHub secret: NOTION_DATABASE_ID")
 
           headers = {
-            "Authorization": f"Bearer {TOKEN}",
-            "Notion-Version": "2022-06-28",
-            "Content-Type": "application/json",
+              "Authorization": f"Bearer {TOKEN}",
+              "Notion-Version": "2022-06-28",
+              "Content-Type": "application/json",
           }
 
           with open("feed.json", "r", encoding="utf-8") as f:
-            feed = json.load(f)
+              feed = json.load(f)
 
           items = feed.get("items", [])
           created = 0
           skipped = 0
 
           def query_exists(url: str) -> bool:
-            payload = {
-              "page_size": 1,
-              "filter": {"property": "URL", "url": {"equals": url}},
-            }
-            r = requests.post(f"https://api.notion.com/v1/databases/{DB_ID}/query",
-                              headers=headers, json=payload, timeout=30)
-            r.raise_for_status()
-            return len(r.json().get("results", [])) > 0
+              payload = {
+                  "page_size": 1,
+                  "filter": {"property": "URL", "url": {"equals": url}},
+              }
+              r = requests.post(
+                  f"https://api.notion.com/v1/databases/{DB_ID}/query",
+                  headers=headers,
+                  json=payload,
+                  timeout=30,
+              )
+              r.raise_for_status()
+              return len(r.json().get("results", [])) > 0
 
           for it in items:
-            url = it.get("link")
-            if not url:
-              continue
+              url = it.get("link")
+              if not url:
+                  continue
 
-            if query_exists(url):
-              skipped += 1
-              continue
+              if query_exists(url):
+                  skipped += 1
+                  continue
 
-            title = (it.get("headline") or "Untitled")[:180]
-            source = (it.get("source") or "")[:200]
-            query = (it.get("query") or "")[:200]
-            iso = it.get("pubDateISO")
+              title = (it.get("headline") or "Untitled")[:180]
+              source = (it.get("source") or "")[:200]
+              query = (it.get("query") or "")[:200]
+              iso = it.get("pubDateISO")
 
-            props = {
-              "Name": {"title": [{"text": {"content": title}}]},
-              "URL": {"url": url},
-              "Source": {"rich_text": [{"text": {"content": source}}]} if source else {"rich_text": []},
-              "Query": {"rich_text": [{"text": {"content": query}}]} if query else {"rich_text": []},
-            }
+              props = {
+                  "Name": {"title": [{"text": {"content": title}}]},
+                  "URL": {"url": url},
+                  "Source": {"rich_text": [{"text": {"content": source}}]} if source else {"rich_text": []},
+                  "Query": {"rich_text": [{"text": {"content": query}}]} if query else {"rich_text": []},
+              }
 
-            # DATE property (optional) - only set if ISO string exists
-            if isinstance(iso, str) and "T" in iso:
-              props["DATE"] = {"date": {"start": iso}}
+              # Your Notion column is called DATE (case-sensitive)
+              if isinstance(iso, str) and "T" in iso:
+                  props["DATE"] = {"date": {"start": iso}}
 
-            payload = {"parent": {"database_id": DB_ID}, "properties": props}
-            r = requests.post("https://api.notion.com/v1/pages",
-                              headers=headers, json=payload, timeout=30)
-            r.raise_for_status()
+              payload = {"parent": {"database_id": DB_ID}, "properties": props}
+              r = requests.post(
+                  "https://api.notion.com/v1/pages",
+                  headers=headers,
+                  json=payload,
+                  timeout=30,
+              )
+              r.raise_for_status()
 
-            created += 1
-            time.sleep(0.35)  # rate-limit friendly
+              created += 1
+              time.sleep(0.35)  # rate-limit friendly
 
           print(f"Notion sync done. created={created}, skipped_existing={skipped}")
           PY
