@@ -129,23 +129,21 @@ jobs:
           PY
 
       - name: Commit feed.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+  run: |
+    git config user.name "github-actions[bot]"
+    git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Ensure we're up-to-date before committing/pushing
-          git fetch origin main
-          git pull --rebase origin main
+    # Stage + commit the generated file first
+    git add feed.json
+    git diff --cached --quiet && echo "No changes to commit" && exit 0
+    git commit -m "Update feed.json"
 
-          git add feed.json
+    # Now bring in any remote changes and replay our commit on top
+    git fetch origin main
+    git rebase origin/main
 
-          # No changes => exit cleanly
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-
-          git commit -m "Update feed.json"
-
-          # Push; if remote changed during run, rebase and push again
-          git push || (git pull --rebase origin main && git push)
+    # Push; if someone pushed again while we were rebasing, retry once
+    git push || (git fetch origin main && git rebase origin/main && git push)
 
       - name: Install Python deps
         run: pip3 install requests
