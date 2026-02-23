@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-23T18:53:50.486259+00:00",
+  "generatedAt": "2026-02-23T19:53:52.394502+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon - Kyiv Post",
@@ -11,15 +11,6 @@
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
-      "headline": "Ukrainian MaXon Systems Secures Investment from U.S.-Based Green Flag Ventures - Inventure.com.ua",
-      "source": "Inventure.com.ua",
-      "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxPQ0NSc1I1R1V3a0RMUl9hVm1EQWJuX3p4eTh1WlZ5U3owVF80VUxqTlhnZHU1TWp1c010UmVaZFhpeC0yWXNleEFMd0g2cFlKQmR3WFQxQ1Z6czBqTUlqMjA3RmpOME9rZkh6NXBtOTRkRFBKZDI4NnFDLWpmRlFkWlRtcU1mTnNBcV9KUUFnVndZdDREVlJDOElfTDVkdTAzaVdrdXlidHlzelpHdTZ4ek1LMkJRVTh5X204?oc=5",
-      "pubDate": "Mon, 23 Feb 2026 13:26:00 GMT",
-      "pubDateISO": "2026-02-23T13:26:00+00:00",
-      "snippet": "Ukrainian MaXon Systems Secures Investment from U.S.-Based Green Flag Ventures&nbsp;&nbsp;Inventure.com.ua",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
-    {
       "headline": "Ukrainian Deftech Startup MaXon Secures Investment from Green Flag Ventures - Scroll.media",
       "source": "Scroll.media",
       "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNZU5Udl9KX2dERnc2cnhwczZWZmwtTENKSUEyYncxMWxHSlVoX3F4YXpyMWRwckRmZ01NSlBiaEdOR3ZSQlRwVk5rYWhURGtBaS1HME8wZmJidUtveGgwUmNXRGVING9VaDhXVERoSkFWMmRVdEJTeS1VVmhZa0VKeHo3dnQtRDNNRDdXaHVjclFqYUd0R1NCMVo5aTZhU01IRWZua190OGotcHZkUTNXbA?oc=5",
@@ -27,6 +18,15 @@
       "pubDateISO": "2026-02-20T23:27:42+00:00",
       "snippet": "Ukrainian Deftech Startup MaXon Secures Investment from Green Flag Ventures&nbsp;&nbsp;Scroll.media",
       "query": "\"Green Flag Ventures\""
+    },
+    {
+      "headline": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures - dev.ua",
+      "source": "dev.ua",
+      "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9oc3dHWS1kQlVSVDZIRUxHakpSZy1lVXllclF2YzRPMnBoUFh2SlZqNW56c3lpUTE4MnRUNWhRdVIxZDR6OFVlR1lQR1RsSnJSb094bEhtb1E2bW9EaU5OT1UwbEFfdG40Ulg4?oc=5",
+      "pubDate": "Fri, 20 Feb 2026 09:08:00 GMT",
+      "pubDateISO": "2026-02-20T09:08:00+00:00",
+      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures&nbsp;&nbsp;dev.ua",
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
       "headline": "Investment in Ukrainian defense tech tops $100 million in 2025 - The New Voice of Ukraine",
@@ -108,15 +108,6 @@
       "pubDateISO": "2025-10-15T07:00:00+00:00",
       "snippet": "Bell Textron Inc plans to manufacture helicopters in Ukraine&nbsp;&nbsp;thedefender.media",
       "query": "\"Justin Zeefe\""
-    },
-    {
-      "headline": "Ukraine’s Drone War Over the Black Sea Is Heating Up - The National Interest",
-      "source": "The National Interest",
-      "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOMDRiYk94bTZnSGJTVGdZeU5EZW8wT0xaQWpxWlRfcDBTWGJqemtZS09fTGJKS0lfakhVd3REWTk2TWhTLWVkRUM3NEp4ZFk2aDkzc2NXcTVGVUZubUQ0R28wdmk5ZnRob0hFeDh1WjM5a0oxTk5JdjVPZGJhS0dDVHV2TEFWdjltOEZWWmh5cnBmZw?oc=5",
-      "pubDate": "Tue, 14 Oct 2025 07:00:00 GMT",
-      "pubDateISO": "2025-10-14T07:00:00+00:00",
-      "snippet": "Ukraine’s Drone War Over the Black Sea Is Heating Up&nbsp;&nbsp;The National Interest",
-      "query": "\"Deborah Fairlamb\""
     },
     {
       "headline": "A Desperate Race for Drone Defenses - Center for European Policy Analysis (CEPA)",
