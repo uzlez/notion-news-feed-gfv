@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: "*/30 * * * *"
 
+# Prevent overlapping runs that fight over pushing commits
+concurrency:
+  group: notion-news-feed-gfv
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -13,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Fetch Google News RSS and write feed.json
         run: |
@@ -92,17 +99,17 @@ jobs:
                   if not dt or dt < cutoff:
                       continue
 
-                  # Add query string so we can store it in Notion
                   items.append({
                       "headline": title,
                       "source": source,
                       "link": link,
                       "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-                      "pubDateISO": dt.isoformat(),  # handy for Notion DATE
+                      "pubDateISO": dt.isoformat(),
                       "snippet": desc,
                       "query": q,
                   })
 
+          # De-dupe by link (fallback to headline+pubDate)
           seen = set()
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
@@ -125,11 +132,21 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add feed.json
-          git commit -m "Update feed.json" || exit 0
-          git push
 
-      # --- NEW: push items into Notion database ---
+          # Ensure we're up-to-date before committing/pushing
+          git fetch origin main
+          git pull --rebase origin main
+
+          git add feed.json
+
+          # No changes => exit cleanly
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+
+          git commit -m "Update feed.json"
+
+          # Push; if remote changed during run, rebase and push again
+          git push || (git pull --rebase origin main && git push)
+
       - name: Install Python deps
         run: pip3 install requests
 
@@ -141,10 +158,14 @@ jobs:
           python3 - << 'PY'
           import os, json, time
           import requests
-          from datetime import datetime, timezone
 
-          TOKEN = os.environ["NOTION_TOKEN"]
-          DB_ID = os.environ["NOTION_DATABASE_ID"].replace("-", "")
+          TOKEN = os.environ.get("NOTION_TOKEN", "")
+          DB_ID = os.environ.get("NOTION_DATABASE_ID", "").replace("-", "")
+
+          if not TOKEN:
+            raise RuntimeError("Missing GitHub secret: NOTION_TOKEN")
+          if not DB_ID:
+            raise RuntimeError("Missing GitHub secret: NOTION_DATABASE_ID")
 
           headers = {
             "Authorization": f"Bearer {TOKEN}",
@@ -162,10 +183,7 @@ jobs:
           def query_exists(url: str) -> bool:
             payload = {
               "page_size": 1,
-              "filter": {
-                "property": "URL",
-                "url": {"equals": url}
-              }
+              "filter": {"property": "URL", "url": {"equals": url}},
             }
             r = requests.post(f"https://api.notion.com/v1/databases/{DB_ID}/query",
                               headers=headers, json=payload, timeout=30)
@@ -184,7 +202,7 @@ jobs:
             title = (it.get("headline") or "Untitled")[:180]
             source = (it.get("source") or "")[:200]
             query = (it.get("query") or "")[:200]
-            iso = it.get("pubDateISO")  # already ISO8601
+            iso = it.get("pubDateISO")
 
             props = {
               "Name": {"title": [{"text": {"content": title}}]},
@@ -193,7 +211,7 @@ jobs:
               "Query": {"rich_text": [{"text": {"content": query}}]} if query else {"rich_text": []},
             }
 
-            # DATE is optional, but nice
+            # DATE property (optional) - only set if ISO string exists
             if isinstance(iso, str) and "T" in iso:
               props["DATE"] = {"date": {"start": iso}}
 
@@ -201,10 +219,9 @@ jobs:
             r = requests.post("https://api.notion.com/v1/pages",
                               headers=headers, json=payload, timeout=30)
             r.raise_for_status()
-            created += 1
 
-            # rate-limit friendly
-            time.sleep(0.35)
+            created += 1
+            time.sleep(0.35)  # rate-limit friendly
 
           print(f"Notion sync done. created={created}, skipped_existing={skipped}")
           PY
