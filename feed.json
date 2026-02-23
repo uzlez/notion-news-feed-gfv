@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-23T19:53:52.394502+00:00",
+  "generatedAt": "2026-02-23T20:37:27.462141+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon - Kyiv Post",
@@ -18,15 +18,6 @@
       "pubDateISO": "2026-02-20T23:27:42+00:00",
       "snippet": "Ukrainian Deftech Startup MaXon Secures Investment from Green Flag Ventures&nbsp;&nbsp;Scroll.media",
       "query": "\"Green Flag Ventures\""
-    },
-    {
-      "headline": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures - dev.ua",
-      "source": "dev.ua",
-      "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9oc3dHWS1kQlVSVDZIRUxHakpSZy1lVXllclF2YzRPMnBoUFh2SlZqNW56c3lpUTE4MnRUNWhRdVIxZDR6OFVlR1lQR1RsSnJSb094bEhtb1E2bW9EaU5OT1UwbEFfdG40Ulg4?oc=5",
-      "pubDate": "Fri, 20 Feb 2026 09:08:00 GMT",
-      "pubDateISO": "2026-02-20T09:08:00+00:00",
-      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures&nbsp;&nbsp;dev.ua",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
       "headline": "Investment in Ukrainian defense tech tops $100 million in 2025 - The New Voice of Ukraine",
@@ -117,6 +108,15 @@
       "pubDateISO": "2025-10-07T07:00:00+00:00",
       "snippet": "A Desperate Race for Drone Defenses&nbsp;&nbsp;Center for European Policy Analysis (CEPA)",
       "query": "\"Deborah Fairlamb\""
+    },
+    {
+      "headline": "Kyiv Independent reporter moderates a panel on Ukraine’s defense industry at IT Arena 2025 - The Kyiv Independent",
+      "source": "The Kyiv Independent",
+      "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQX1Q0WldjSUJwaUI4eFh5c1dYd1hfMzFOT1NiYjBBTUdIY3d5WGFJd2VVLXdvSHlaRE1LMUpOV3l6ZE5CUUt5MGxaXzBwZ3BiUDBEdXlmaGMybE90V0t4bEtBRDBRRTRzZDg2U21uc2tENm1GMVNFb0ZCUVNQclJTYVhZLTZSOGpuOFRTMkhzLWxDYWd5blhZcmpHc0c0WEx2S3VOX3R0VDJSTEFhcVFicVdQSTVaY3dhVFE?oc=5",
+      "pubDate": "Tue, 30 Sep 2025 07:00:00 GMT",
+      "pubDateISO": "2025-09-30T07:00:00+00:00",
+      "snippet": "Kyiv Independent reporter moderates a panel on Ukraine’s defense industry at IT Arena 2025&nbsp;&nbsp;The Kyiv Independent",
+      "query": "\"Justin Zeefe\""
     },
     {
       "headline": "11 Startups Secure Over $2.8M at IT Arena 2025 - Scroll.media",
