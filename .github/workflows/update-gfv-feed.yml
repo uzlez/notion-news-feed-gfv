@@ -1,0 +1,130 @@
+name: Update feed.json (GFV mentions)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Google News RSS and write feed.json
+        run: |
+          python3 - << 'PY'
+          import json, re, urllib.parse, urllib.request
+          import xml.etree.ElementTree as ET
+          from datetime import datetime, timezone, timedelta
+
+          MAX_ITEMS = 200
+          MAX_AGE_DAYS = 180
+
+          # Prefer UK English results (adjust if you want)
+          HL = "en-GB"
+          GL = "GB"
+          CEID = "GB:en"
+
+          # Primary keywords (tuned to reduce noise from unrelated "GFV" meanings)
+          QUERIES = [
+              '"Green Flag Ventures"',
+              '"Justin Zeefe"',
+              '"Deborah Fairlamb"',
+              'GFV -("gross floor value") -("good faith violation") -("gross floor")',
+              '("Green Flag Ventures" OR "Justin Zeefe" OR "Deborah Fairlamb" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)',
+          ]
+
+          cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+          cutoff_date = cutoff.date().isoformat()
+
+          def clean_html(s: str) -> str:
+              if not s:
+                  return ""
+              s = re.sub(r"<br\s*/?>", " ", s, flags=re.I)
+              s = re.sub(r"<[^>]+>", "", s)
+              s = re.sub(r"\s+", " ", s).strip()
+              return s
+
+          def parse_pubdate(s: str):
+              # Google News RSS typically uses RFC822-like format
+              for fmt in ("%a, %d %b %Y %H:%M:%S %Z", "%a, %d %b %Y %H:%M:%S %z"):
+                  try:
+                      dt = datetime.strptime(s, fmt)
+                      if dt.tzinfo is None:
+                          dt = dt.replace(tzinfo=timezone.utc)
+                      return dt.astimezone(timezone.utc)
+                  except Exception:
+                      pass
+              return None
+
+          items = []
+          for q in QUERIES:
+              # Adding after:cutoff_date improves recall, but we still filter by pubDate below.
+              q2 = f"{q} after:{cutoff_date}"
+              url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({
+                  "q": q2,
+                  "hl": HL,
+                  "gl": GL,
+                  "ceid": CEID,
+              })
+              try:
+                  with urllib.request.urlopen(url, timeout=30) as resp:
+                      xml = resp.read()
+              except Exception as e:
+                  print("Fetch failed:", q, e)
+                  continue
+
+              root = ET.fromstring(xml)
+              channel = root.find("channel")
+              if channel is None:
+                  continue
+
+              for it in channel.findall("item"):
+                  title = (it.findtext("title") or "").strip()
+                  link = (it.findtext("link") or "").strip()
+                  pub = (it.findtext("pubDate") or "").strip()
+                  src_el = it.find("source")
+                  source = (src_el.text or "").strip() if src_el is not None and src_el.text else ""
+                  desc = clean_html((it.findtext("description") or "").strip())
+
+                  dt = parse_pubdate(pub)
+                  if not dt or dt < cutoff:
+                      continue
+
+                  items.append({
+                      "headline": title,
+                      "source": source,
+                      "link": link,
+                      "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
+                      "snippet": desc,
+                  })
+
+          # De-dupe by link (fallback to headline+pubDate)
+          seen = set()
+          out = []
+          for x in sorted(items, key=lambda z: z["pubDate"], reverse=True):
+              key = x["link"] or (x["headline"] + "|" + x["pubDate"])
+              if key in seen:
+                  continue
+              seen.add(key)
+              out.append(x)
+              if len(out) >= MAX_ITEMS:
+                  break
+
+          payload = {"generatedAt": datetime.now(timezone.utc).isoformat(), "items": out}
+          with open("feed.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False, indent=2)
+
+          print("Wrote", len(out), "items")
+          PY
+
+      - name: Commit feed.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add feed.json
+          git commit -m "Update feed.json" || exit 0
+          git push
