@@ -125,11 +125,12 @@ jobs:
           print("Wrote", len(out), "items")
           PY
 
-      - name: Commit feed.json
+       - name: Commit feed.json
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update feed.json"
           file_pattern: "feed.json"
+          push_options: "--force"
 
       - name: Install Python deps
         run: |
