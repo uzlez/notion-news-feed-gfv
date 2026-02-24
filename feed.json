@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-24T14:06:32.330049+00:00",
+  "generatedAt": "2026-02-24T15:15:19.264483+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon - Kyiv Post",
@@ -101,24 +101,6 @@
       "query": "\"Green Flag Ventures\""
     },
     {
-      "headline": "Bell Textron Inc plans to manufacture helicopters in Ukraine - thedefender.media",
-      "source": "thedefender.media",
-      "link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE9ubHhuSzJqdkZUTmlnTW4xb19WbkZGcEdHU0dQR1ZBaGdDR3ltUzlyRmV5MXVjTEJodjhLTG1kM3ZLZ0QydFZBRGVsMFNNRXk5YmI5UG9SYTE1ZUQ0U2wzV0lZUXIxNGxRVkpJY01TWUc2dmJidWRIWA?oc=5",
-      "pubDate": "Wed, 15 Oct 2025 07:00:00 GMT",
-      "pubDateISO": "2025-10-15T07:00:00+00:00",
-      "snippet": "Bell Textron Inc plans to manufacture helicopters in Ukraine&nbsp;&nbsp;thedefender.media",
-      "query": "\"Justin Zeefe\""
-    },
-    {
-      "headline": "Ukraine’s Drone War Over the Black Sea Is Heating Up - The National Interest",
-      "source": "The National Interest",
-      "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOMDRiYk94bTZnSGJTVGdZeU5EZW8wT0xaQWpxWlRfcDBTWGJqemtZS09fTGJKS0lfakhVd3REWTk2TWhTLWVkRUM3NEp4ZFk2aDkzc2NXcTVGVUZubUQ0R28wdmk5ZnRob0hFeDh1WjM5a0oxTk5JdjVPZGJhS0dDVHV2TEFWdjltOEZWWmh5cnBmZw?oc=5",
-      "pubDate": "Tue, 14 Oct 2025 07:00:00 GMT",
-      "pubDateISO": "2025-10-14T07:00:00+00:00",
-      "snippet": "Ukraine’s Drone War Over the Black Sea Is Heating Up&nbsp;&nbsp;The National Interest",
-      "query": "\"Deborah Fairlamb\""
-    },
-    {
       "headline": "A Desperate Race for Drone Defenses - Center for European Policy Analysis (CEPA)",
       "source": "Center for European Policy Analysis (CEPA)",
       "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9LWWFVOFRrV2RhTEwybFFnSDdUeExMa3ktSTR1c29iSXBjOVl2bmxCWTRya2pjSVZRTFVKMG16TERrRl9lbklmVjhaMF96a0Q1Y2k3WWtvY0V4UVpzYVRFN3BlRUgwbmpOZDN6TVdn?oc=5",
@@ -152,7 +134,7 @@
       "pubDate": "Fri, 19 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-19T07:00:00+00:00",
       "snippet": "Interview: Why Green Flag Ventures Is On the Ground In Ukraine&nbsp;&nbsp;Resilience Media",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
+      "query": "\"Justin Zeefe\""
     },
     {
       "headline": "The largest investment in a Ukrainian military tech startup since the start of the war: Swarmer, which develops drone swarm technology, has raised $15M. - ubn.news",
