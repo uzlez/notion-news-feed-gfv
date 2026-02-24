@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-24T16:34:25.045592+00:00",
+  "generatedAt": "2026-02-24T17:52:25.576968+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon - Kyiv Post",
@@ -143,7 +143,7 @@
       "pubDate": "Fri, 19 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-19T07:00:00+00:00",
       "snippet": "Interview: Why Green Flag Ventures Is On the Ground In Ukraine&nbsp;&nbsp;Resilience Media",
-      "query": "\"Justin Zeefe\""
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
       "headline": "The largest investment in a Ukrainian military tech startup since the start of the war: Swarmer, which develops drone swarm technology, has raised $15M. - ubn.news",
