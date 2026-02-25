@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-25T11:42:11.795994+00:00",
+  "generatedAt": "2026-02-25T13:15:41.743134+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -29,6 +29,16 @@
       "pubDate": "Fri, 20 Feb 2026 23:27:42 GMT",
       "pubDateISO": "2026-02-20T23:27:42+00:00",
       "snippet": "Ukrainian Deftech Startup MaXon Secures Investment from Green Flag Ventures Scroll.media",
+      "query": "\"Green Flag Ventures\""
+    },
+    {
+      "headline": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures",
+      "source": "dev.ua",
+      "source_url": "https://dev.ua",
+      "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9oc3dHWS1kQlVSVDZIRUxHakpSZy1lVXllclF2YzRPMnBoUFh2SlZqNW56c3lpUTE4MnRUNWhRdVIxZDR6OFVlR1lQR1RsSnJSb094bEhtb1E2bW9EaU5OT1UwbEFfdG40Ulg4?oc=5",
+      "pubDate": "Fri, 20 Feb 2026 09:08:00 GMT",
+      "pubDateISO": "2026-02-20T09:08:00+00:00",
+      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures dev.ua",
       "query": "\"Green Flag Ventures\""
     },
     {
@@ -62,36 +72,6 @@
       "query": "\"Green Flag Ventures\""
     },
     {
-      "headline": "Weaponizing Capital: Why Some Argue Waiting for Peace to Invest Is a Strategic Mistake",
-      "source": "Kyiv Post",
-      "source_url": "https://www.kyivpost.com",
-      "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE12emJJbElkd3ppOFBMTDVvMmYzTHVnTjJiWUJlOW9vaUs3OWhjcmxnWGNPMDZvYmU3ZTlyRWt2dkFUekd2NlVFS05GRQ?oc=5",
-      "pubDate": "Sun, 23 Nov 2025 08:00:00 GMT",
-      "pubDateISO": "2025-11-23T08:00:00+00:00",
-      "snippet": "Weaponizing Capital: Why Some Argue Waiting for Peace to Invest Is a Strategic Mistake Kyiv Post",
-      "query": "\"Deborah Fairlamb\""
-    },
-    {
-      "headline": "How to prepare for arms exports. A checklist for founders of Defense Tech startups",
-      "source": "en.ain.ua",
-      "source_url": "https://en.ain.ua",
-      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE10VTl1emNOcV9MM0NYU2NaX05HazgzRmUwakVOQU1rZ3V3d2FteDVRek5mNUJjdVlvTy1nVTB5X1FfRkRmSFR5ZHZwY3dRbjVWYm1hTFNKV2t3bklKUHFjWi16WTZXTnRNQVBOeXE1X1JENHRnV3o5aFJRTQ?oc=5",
-      "pubDate": "Fri, 21 Nov 2025 08:00:00 GMT",
-      "pubDateISO": "2025-11-21T08:00:00+00:00",
-      "snippet": "How to prepare for arms exports. A checklist for founders of Defense Tech startups en.ain.ua",
-      "query": "\"Deborah Fairlamb\""
-    },
-    {
-      "headline": "SOC Prime attracts investment from u.ventures for AI solutions in cybersecurity",
-      "source": "en.ain.ua",
-      "source_url": "https://en.ain.ua",
-      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5lWkF5cUh0VXpzTnllNTcwSElpRWtCVXozNjdkLU9Yd0pka1JDNk8yeHVnVmwtSlBjc0tzbzI4QzlRMHliQ0dMUFRkYkxPZWl4SVhEdXJZd1FQUkxPaXlLem1IazVENkg2VW15Zw?oc=5",
-      "pubDate": "Thu, 20 Nov 2025 08:00:00 GMT",
-      "pubDateISO": "2025-11-20T08:00:00+00:00",
-      "snippet": "SOC Prime attracts investment from u.ventures for AI solutions in cybersecurity en.ain.ua",
-      "query": "\"Green Flag Ventures\""
-    },
-    {
       "headline": "At Ukraine’s Top Tech Event, Faster and Cheaper Rule",
       "source": "IEEE Spectrum",
       "source_url": "https://spectrum.ieee.org",
@@ -112,16 +92,6 @@
       "query": "\"Green Flag Ventures\""
     },
     {
-      "headline": "Ukraine’s Drone Revolution Is Forcing Europe to Rethink the Economics of War",
-      "source": "UNITED24 Media",
-      "source_url": "https://united24media.com",
-      "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxPQUp1SDBodGxHUGhNX080MEprdHYtQUM1WlRlZEZuVTFDbTV0YV9fNEV0c3VaemVnUEhXTXk4dEpvSGxieURVZWd3Zm9UbjVYNmFrbV9oUUxqcC16MGhkWjZGbG1oUmVaaW9Ma1ZSdEltNldhei1pVHIyY0dXclFWVERkLVFNdmtKZFZUN3NBTloyTnl6azM4Wk1VclBIUzNwNHgzNGtueWNtdTIybVVYeG53aDkxX0hSaXZHSmxlWQ?oc=5",
-      "pubDate": "Thu, 30 Oct 2025 07:00:00 GMT",
-      "pubDateISO": "2025-10-30T07:00:00+00:00",
-      "snippet": "Ukraine’s Drone Revolution Is Forcing Europe to Rethink the Economics of War UNITED24 Media",
-      "query": "\"Deborah Fairlamb\""
-    },
-    {
       "headline": "This fund is helping Ukrainian dual-use startups go global: interview with Green Flag Ventures co-founder Justin Zeefe",
       "source": "thedefender.media",
       "source_url": "https://thedefender.media",
@@ -130,26 +100,6 @@
       "pubDateISO": "2025-10-15T07:00:00+00:00",
       "snippet": "This fund is helping Ukrainian dual-use startups go global: interview with Green Flag Ventures co-founder Justin Zeefe thedefender.media",
       "query": "\"Green Flag Ventures\""
-    },
-    {
-      "headline": "Ukraine’s Drone War Over the Black Sea Is Heating Up",
-      "source": "The National Interest",
-      "source_url": "https://nationalinterest.org",
-      "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOMDRiYk94bTZnSGJTVGdZeU5EZW8wT0xaQWpxWlRfcDBTWGJqemtZS09fTGJKS0lfakhVd3REWTk2TWhTLWVkRUM3NEp4ZFk2aDkzc2NXcTVGVUZubUQ0R28wdmk5ZnRob0hFeDh1WjM5a0oxTk5JdjVPZGJhS0dDVHV2TEFWdjltOEZWWmh5cnBmZw?oc=5",
-      "pubDate": "Tue, 14 Oct 2025 07:00:00 GMT",
-      "pubDateISO": "2025-10-14T07:00:00+00:00",
-      "snippet": "Ukraine’s Drone War Over the Black Sea Is Heating Up The National Interest",
-      "query": "\"Deborah Fairlamb\""
-    },
-    {
-      "headline": "A Desperate Race for Drone Defenses",
-      "source": "Center for European Policy Analysis (CEPA)",
-      "source_url": "https://cepa.org",
-      "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9LWWFVOFRrV2RhTEwybFFnSDdUeExMa3ktSTR1c29iSXBjOVl2bmxCWTRya2pjSVZRTFVKMG16TERrRl9lbklmVjhaMF96a0Q1Y2k3WWtvY0V4UVpzYVRFN3BlRUgwbmpOZDN6TVdn?oc=5",
-      "pubDate": "Tue, 07 Oct 2025 07:00:00 GMT",
-      "pubDateISO": "2025-10-07T07:00:00+00:00",
-      "snippet": "A Desperate Race for Drone Defenses Center for European Policy Analysis (CEPA)",
-      "query": "\"Deborah Fairlamb\""
     },
     {
       "headline": "Kyiv Independent reporter moderates a panel on Ukraine’s defense industry at IT Arena 2025",
@@ -300,16 +250,6 @@
       "pubDateISO": "2025-09-12T07:00:00+00:00",
       "snippet": "IT Arena Startup Competition 2025 Investment Fund Reaches $12.5 Million Scroll.media",
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
-    {
-      "headline": "Is NATO Prepared for Autonomous Warfare?",
-      "source": "The National Interest",
-      "source_url": "https://nationalinterest.org",
-      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNMF9wVkFyV3dyOW90UVQtOUw1cFZWVTRWWmN6aDVoMnhXbmRjVDdWTnd0Y1pGcXVPZ0dSOUNBYlI2Y0w5TXhkNWZodWw1cjl2Mnh4OTNWUjJUZ1lXN1RqeDg2RG40bGhSc0NCTXl3WC0zdmhISDBwMkxoYWJUZFFtNHN3?oc=5",
-      "pubDate": "Wed, 10 Sep 2025 07:00:00 GMT",
-      "pubDateISO": "2025-09-10T07:00:00+00:00",
-      "snippet": "Is NATO Prepared for Autonomous Warfare? The National Interest",
-      "query": "\"Deborah Fairlamb\""
     }
   ]
 }
