@@ -151,8 +151,8 @@ jobs:
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: |
           python3 - << 'PY'
-          import os, json, re, time, textwrap, tempfile
-          import urllib.request, urllib.error
+          import os, json, re, time, textwrap, tempfile, base64, struct
+          import urllib.request, urllib.error, urllib.parse
           import requests
           import trafilatura
           from fpdf import FPDF
@@ -170,22 +170,81 @@ jobs:
               s = (s or "").strip().strip('"').strip("'")
               return s.replace("\n", "").replace("\r", "").replace("\t", "").strip()
 
-          def resolve_google_news_url(gn_url: str) -> str:
-              """Follow Google News redirect to get the real article URL."""
+          def decode_google_news_url(gn_url: str) -> str:
+              """
+              Decode the real article URL from a Google News RSS link.
+              Google News encodes the target URL in the article ID using a
+              modified base64 scheme. We use their _Agi decoding endpoint
+              as a fallback, then try direct base64 extraction.
+              """
+              try:
+                  # Extract the article ID (the CBMi... part)
+                  parsed = urllib.parse.urlparse(gn_url)
+                  path_parts = parsed.path.split("/")
+                  article_id = path_parts[-1].split("?")[0]
+
+                  if not article_id.startswith("CB"):
+                      return gn_url
+
+                  # Google News decode API
+                  decode_url = f"https://news.google.com/_Agi?authuser=0&art={article_id}"
+                  req = urllib.request.Request(
+                      decode_url,
+                      headers={
+                          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                          "Referer": "https://news.google.com/",
+                      }
+                  )
+                  with urllib.request.urlopen(req, timeout=15) as resp:
+                      body = resp.read().decode("utf-8", errors="ignore")
+                      # Response contains the real URL in JSON-like format
+                      match = re.search(r'"(https?://[^"]+)"', body)
+                      if match:
+                          real = match.group(1)
+                          if "google.com" not in real:
+                              return real
+              except Exception:
+                  pass
+
+              # Fallback: try base64 decode of the article ID
+              try:
+                  article_id = urllib.parse.urlparse(gn_url).path.split("/")[-1].split("?")[0]
+                  # Pad base64
+                  padded = article_id + "=" * (4 - len(article_id) % 4)
+                  decoded = base64.b64decode(padded, altchars=b"-_").decode("latin-1", errors="ignore")
+                  url_match = re.search(r'(https?://[^\x00-\x1f\s"<>]+)', decoded)
+                  if url_match:
+                      candidate = url_match.group(1)
+                      if "google.com" not in candidate and len(candidate) > 15:
+                          return candidate
+              except Exception:
+                  pass
+
+              # Final fallback: follow redirect with browser UA
               try:
                   req = urllib.request.Request(
                       gn_url,
-                      headers={"User-Agent": "Mozilla/5.0 (compatible; GFVBot/1.0)"}
+                      headers={
+                          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                          "Accept": "text/html,application/xhtml+xml",
+                      }
                   )
                   with urllib.request.urlopen(req, timeout=15) as resp:
-                      return resp.url
+                      final = resp.url
+                      if "google.com" not in final:
+                          return final
               except urllib.error.HTTPError as e:
-                  return e.url if e.url else gn_url
+                  if e.url and "google.com" not in e.url:
+                      return e.url
               except Exception:
-                  return gn_url
+                  pass
+
+              return gn_url
 
           def fetch_article_text(url: str) -> str:
               """Fetch and extract full article text using trafilatura."""
+              if "google.com" in url:
+                  return ""
               try:
                   downloaded = trafilatura.fetch_url(url)
                   if not downloaded:
@@ -228,11 +287,8 @@ jobs:
               """Generate a clean PDF with full article content."""
               pdf = FPDF()
               pdf.set_auto_page_break(auto=True, margin=15)
-
-              # Register Unicode fonts
               pdf.add_font("DejaVu", "", FONT_REGULAR)
               pdf.add_font("DejaVuBold", "", FONT_BOLD)
-
               pdf.add_page()
 
               # Header bar
@@ -271,13 +327,14 @@ jobs:
               pdf.ln(5)
 
               # Real URL
+              display_url = real_url if "google.com" not in real_url else "(could not resolve — see original Google News link)"
               pdf.set_font("DejaVuBold", "", 9)
               pdf.set_text_color(30, 30, 30)
               pdf.cell(0, 6, "Article URL:",
                        new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.set_font("DejaVu", "", 9)
               pdf.set_text_color(0, 80, 180)
-              for chunk in textwrap.wrap(real_url, width=95):
+              for chunk in textwrap.wrap(display_url, width=95):
                   pdf.cell(0, 5, chunk, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.ln(5)
 
@@ -323,7 +380,6 @@ jobs:
               return tmp.name
 
           def upload_to_drive(service, pdf_path: str, filename: str, folder_id: str) -> str:
-              """Upload PDF and return a shareable https link."""
               meta = {"name": filename, "parents": [folder_id]}
               media = MediaFileUpload(pdf_path, mimetype="application/pdf", resumable=False)
               f = service.files().create(
@@ -364,20 +420,16 @@ jobs:
               "Content-Type": "application/json",
           }
 
-          # Preflight
           pre = requests.get(f"https://api.notion.com/v1/databases/{db_id}", headers=headers, timeout=30)
           if pre.status_code != 200:
               raise RuntimeError(f"Notion preflight failed: {pre.status_code}\n{pre.text}")
 
-          # Build Drive service
           drive_svc = build_drive_service(sa_json)
 
-          # Load feed
           with open("feed.json", "r", encoding="utf-8") as f:
               feed = json.load(f)
           items = feed.get("items", [])
 
-          # Pull existing URLs from Notion
           existing_urls = set()
           start_cursor = None
           for _ in range(50):
@@ -410,17 +462,18 @@ jobs:
               query   = (it.get("query") or "")[:200]
               iso     = it.get("pubDateISO")
 
-              # 1. Resolve real URL
-              print(f"  Resolving URL for: {title[:60]}...")
-              real_url = resolve_google_news_url(url)
-              print(f"  Real URL: {real_url[:80]}")
+              # 1. Decode real URL
+              print(f"  Decoding URL for: {title[:60]}...")
+              real_url = decode_google_news_url(url)
+              resolved = "google.com" not in real_url
+              print(f"  {'✓ Resolved' if resolved else '✗ Still Google URL'}: {real_url[:80]}")
 
               # 2. Fetch full article text
               article_text = fetch_article_text(real_url)
               if article_text:
                   print(f"  Got {len(article_text)} chars of article text")
               else:
-                  print(f"  No article text (paywall or JS-heavy site, using snippet)")
+                  print(f"  No article text (paywall/JS-heavy, using snippet)")
 
               # 3. Generate PDF
               pdf_path = make_pdf(it, real_url, article_text)
