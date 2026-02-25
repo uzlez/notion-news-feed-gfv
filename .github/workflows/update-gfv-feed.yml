@@ -30,7 +30,6 @@ jobs:
 
           MAX_ITEMS = 200
           MAX_AGE_DAYS = 180
-
           HL = "en-GB"
           GL = "GB"
           CEID = "GB:en"
@@ -46,15 +45,19 @@ jobs:
           cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
           cutoff_date = cutoff.date().isoformat()
 
-          def clean_html(s: str) -> str:
-              if not s:
-                  return ""
+          def clean_html(s):
+              if not s: return ""
               s = re.sub(r"<br\s*/?>", " ", s, flags=re.I)
               s = re.sub(r"<[^>]+>", "", s)
-              s = re.sub(r"\s+", " ", s).strip()
-              return s
+              s = re.sub(r"&nbsp;", " ", s)
+              s = re.sub(r"&amp;", "&", s)
+              s = re.sub(r"&lt;", "<", s)
+              s = re.sub(r"&gt;", ">", s)
+              s = re.sub(r"&quot;", '"', s)
+              s = re.sub(r"&#?\w+;", "", s)
+              return re.sub(r"\s+", " ", s).strip()
 
-          def parse_pubdate(s: str):
+          def parse_pubdate(s):
               try:
                   dt = parsedate_to_datetime(s)
                   if dt.tzinfo is None:
@@ -67,12 +70,8 @@ jobs:
           for q in QUERIES:
               q2 = f"{q} after:{cutoff_date}"
               url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({
-                  "q": q2,
-                  "hl": HL,
-                  "gl": GL,
-                  "ceid": CEID,
+                  "q": q2, "hl": HL, "gl": GL, "ceid": CEID,
               })
-
               try:
                   with urllib.request.urlopen(url, timeout=30) as resp:
                       xml = resp.read()
@@ -82,24 +81,24 @@ jobs:
 
               root = ET.fromstring(xml)
               channel = root.find("channel")
-              if channel is None:
-                  continue
+              if channel is None: continue
 
               for it in channel.findall("item"):
                   title = (it.findtext("title") or "").strip()
                   link = (it.findtext("link") or "").strip()
                   pub = (it.findtext("pubDate") or "").strip()
                   src_el = it.find("source")
-                  source = (src_el.text or "").strip() if src_el is not None and src_el.text else ""
+                  source = (src_el.text or "").strip() if src_el is not None else ""
+                  src_url = src_el.get("url", "") if src_el is not None else ""
                   desc = clean_html((it.findtext("description") or "").strip())
 
                   dt = parse_pubdate(pub)
-                  if not dt or dt < cutoff:
-                      continue
+                  if not dt or dt < cutoff: continue
 
                   items.append({
                       "headline": title,
                       "source": source,
+                      "source_url": src_url,
                       "link": link,
                       "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
                       "pubDateISO": dt.isoformat(),
@@ -111,17 +110,14 @@ jobs:
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
               key = x["link"] or (x["headline"] + "|" + x["pubDate"])
-              if key in seen:
-                  continue
+              if key in seen: continue
               seen.add(key)
               out.append(x)
-              if len(out) >= MAX_ITEMS:
-                  break
+              if len(out) >= MAX_ITEMS: break
 
           payload = {"generatedAt": datetime.now(timezone.utc).isoformat(), "items": out}
           with open("feed.json", "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False, indent=2)
-
           print("Wrote", len(out), "items")
           PY
 
@@ -136,12 +132,10 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           pip3 install requests fpdf2 google-api-python-client google-auth trafilatura
-          # Download DejaVu fonts for Unicode/Cyrillic support
           mkdir -p /tmp/fonts
           wget -q "https://github.com/dejavu-fonts/dejavu-fonts/releases/download/version_2_37/dejavu-fonts-ttf-2.37.tar.bz2" -O /tmp/dejavu.tar.bz2
           tar -xjf /tmp/dejavu.tar.bz2 -C /tmp/fonts --strip-components=2 --wildcards "*/ttf/DejaVuSans.ttf" "*/ttf/DejaVuSans-Bold.ttf"
-          echo "Fonts downloaded:"
-          ls /tmp/fonts/
+          echo "Fonts ready:" && ls /tmp/fonts/
 
       - name: Sync feed.json to Notion database (with PDF archive)
         env:
@@ -149,10 +143,10 @@ jobs:
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
         run: |
           python3 - << 'PY'
-          import os, json, re, time, textwrap, tempfile, base64, struct
-          import urllib.request, urllib.error, urllib.parse
+          import os, json, re, time, textwrap, tempfile
           import requests
           import trafilatura
           from fpdf import FPDF
@@ -166,113 +160,63 @@ jobs:
 
           # ── helpers ──────────────────────────────────────────────────────────
 
-          def clean_secret(s: str) -> str:
-              s = (s or "").strip().strip('"').strip("'")
-              return s.replace("\n", "").replace("\r", "").replace("\t", "").strip()
+          def clean_secret(s):
+              return (s or "").strip().strip('"').strip("'").replace("\n","").replace("\r","").replace("\t","").strip()
 
-          def decode_google_news_url(gn_url: str) -> str:
+          def fetch_via_scraperapi(gn_url, api_key):
               """
-              Decode the real article URL from a Google News RSS link.
-              Google News encodes the target URL in the article ID using a
-              modified base64 scheme. We use their _Agi decoding endpoint
-              as a fallback, then try direct base64 extraction.
+              Use ScraperAPI to fetch the Google News URL.
+              ScraperAPI follows the redirect from a residential IP and returns
+              the real article HTML. We then extract the final URL and text.
               """
+              scraper_url = "https://api.scraperapi.com"
+              params = {
+                  "api_key": api_key,
+                  "url": gn_url,
+                  "follow_redirect": "true",
+                  "render": "false",
+              }
               try:
-                  # Extract the article ID (the CBMi... part)
-                  parsed = urllib.parse.urlparse(gn_url)
-                  path_parts = parsed.path.split("/")
-                  article_id = path_parts[-1].split("?")[0]
+                  resp = requests.get(scraper_url, params=params, timeout=60)
+                  if resp.status_code != 200:
+                      print(f"  ScraperAPI returned {resp.status_code}")
+                      return gn_url, ""
 
-                  if not article_id.startswith("CB"):
-                      return gn_url
+                  html = resp.text
+                  # Get the real URL from response headers or content
+                  real_url = resp.url
+                  # Try to find canonical URL in HTML
+                  canon = re.search(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\']', html)
+                  if canon:
+                      real_url = canon.group(1)
+                  elif "google.com" in real_url:
+                      # Try og:url
+                      og = re.search(r'<meta[^>]+property=["\']og:url["\'][^>]+content=["\']([^"\']+)["\']', html)
+                      if og:
+                          real_url = og.group(1)
 
-                  # Google News decode API
-                  decode_url = f"https://news.google.com/_Agi?authuser=0&art={article_id}"
-                  req = urllib.request.Request(
-                      decode_url,
-                      headers={
-                          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-                          "Referer": "https://news.google.com/",
-                      }
-                  )
-                  with urllib.request.urlopen(req, timeout=15) as resp:
-                      body = resp.read().decode("utf-8", errors="ignore")
-                      # Response contains the real URL in JSON-like format
-                      match = re.search(r'"(https?://[^"]+)"', body)
-                      if match:
-                          real = match.group(1)
-                          if "google.com" not in real:
-                              return real
-              except Exception:
-                  pass
-
-              # Fallback: try base64 decode of the article ID
-              try:
-                  article_id = urllib.parse.urlparse(gn_url).path.split("/")[-1].split("?")[0]
-                  # Pad base64
-                  padded = article_id + "=" * (4 - len(article_id) % 4)
-                  decoded = base64.b64decode(padded, altchars=b"-_").decode("latin-1", errors="ignore")
-                  url_match = re.search(r'(https?://[^\x00-\x1f\s"<>]+)', decoded)
-                  if url_match:
-                      candidate = url_match.group(1)
-                      if "google.com" not in candidate and len(candidate) > 15:
-                          return candidate
-              except Exception:
-                  pass
-
-              # Final fallback: follow redirect with browser UA
-              try:
-                  req = urllib.request.Request(
-                      gn_url,
-                      headers={
-                          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                          "Accept": "text/html,application/xhtml+xml",
-                      }
-                  )
-                  with urllib.request.urlopen(req, timeout=15) as resp:
-                      final = resp.url
-                      if "google.com" not in final:
-                          return final
-              except urllib.error.HTTPError as e:
-                  if e.url and "google.com" not in e.url:
-                      return e.url
-              except Exception:
-                  pass
-
-              return gn_url
-
-          def fetch_article_text(url: str) -> str:
-              """Fetch and extract full article text using trafilatura."""
-              if "google.com" in url:
-                  return ""
-              try:
-                  downloaded = trafilatura.fetch_url(url)
-                  if not downloaded:
-                      return ""
-                  text = trafilatura.extract(
-                      downloaded,
+                  # Extract article text
+                  article_text = trafilatura.extract(
+                      html,
                       include_comments=False,
                       include_tables=False,
-                      no_fallback=False,
-                  )
-                  return (text or "").strip()
-              except Exception as e:
-                  print(f"  trafilatura failed: {e}")
-                  return ""
+                      favor_recall=True,
+                  ) or ""
 
-          def build_drive_service(sa_json: str):
+                  return real_url, article_text.strip()
+
+              except Exception as e:
+                  print(f"  ScraperAPI error: {e}")
+                  return gn_url, ""
+
+          def build_drive_service(sa_json):
               info = json.loads(sa_json)
               creds = service_account.Credentials.from_service_account_info(
-                  info,
-                  scopes=["https://www.googleapis.com/auth/drive.file"],
-              )
+                  info, scopes=["https://www.googleapis.com/auth/drive.file"])
               return build("drive", "v3", credentials=creds, cache_discovery=False)
 
-          def add_text_block(pdf, text, style="", size=10,
-                             color=(50, 50, 50), width=88, line_height=6):
-              """Helper to add wrapped Unicode text block."""
-              font_name = "DejaVuBold" if style == "B" else "DejaVu"
-              pdf.set_font(font_name, "", size)
+          def add_text(pdf, text, bold=False, size=10, color=(50,50,50), width=88, lh=6):
+              pdf.set_font("DejaVuBold" if bold else "DejaVu", "", size)
               pdf.set_text_color(*color)
               for para in text.split("\n"):
                   para = para.strip()
@@ -280,176 +224,145 @@ jobs:
                       pdf.ln(3)
                       continue
                   for line in textwrap.wrap(para, width=width) or [""]:
-                      pdf.cell(0, line_height, line,
-                               new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                      pdf.cell(0, lh, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-          def make_pdf(item: dict, real_url: str, article_text: str) -> str:
-              """Generate a clean PDF with full article content."""
+          def make_pdf(item, real_url, article_text):
               pdf = FPDF()
               pdf.set_auto_page_break(auto=True, margin=15)
               pdf.add_font("DejaVu", "", FONT_REGULAR)
               pdf.add_font("DejaVuBold", "", FONT_BOLD)
               pdf.add_page()
 
-              # Header bar
-              pdf.set_fill_color(30, 30, 30)
-              pdf.rect(0, 0, 210, 18, "F")
-              pdf.set_font("DejaVuBold", "", 11)
+              # Header
+              pdf.set_fill_color(20, 40, 80)
+              pdf.rect(0, 0, 210, 20, "F")
+              pdf.set_font("DejaVuBold", "", 12)
               pdf.set_text_color(255, 255, 255)
-              pdf.set_xy(8, 4)
-              pdf.cell(0, 10, "GFV News Archive",
-                       new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-
-              pdf.set_text_color(30, 30, 30)
-              pdf.ln(6)
+              pdf.set_xy(8, 5)
+              pdf.cell(0, 10, "GFV News Archive", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              pdf.ln(8)
 
               # Headline
-              headline = (item.get("headline") or "Untitled")
-              add_text_block(pdf, headline, style="B", size=15,
-                             color=(20, 20, 20), width=70, line_height=8)
-              pdf.ln(3)
+              add_text(pdf, item.get("headline") or "Untitled",
+                       bold=True, size=14, color=(15,15,15), width=70, lh=8)
+              pdf.ln(4)
 
               # Meta
               source = item.get("source") or ""
-              pub = item.get("pubDate") or ""
-              query = item.get("query") or ""
+              pub    = item.get("pubDate") or ""
+              query  = item.get("query") or ""
               pdf.set_font("DejaVu", "", 9)
-              pdf.set_text_color(100, 100, 100)
-              pdf.cell(0, 6, f"Source: {source}   |   Published: {pub}",
-                       new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              pdf.cell(0, 6, f"Query match: {query}",
-                       new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              pdf.ln(4)
-
-              # Divider
-              pdf.set_draw_color(200, 200, 200)
-              pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+              pdf.set_text_color(120, 120, 120)
+              pdf.cell(0, 5, f"{source}  ·  {pub}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              pdf.cell(0, 5, f"Query: {query}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.ln(5)
 
-              # Real URL
-              display_url = real_url if "google.com" not in real_url else "(could not resolve — see original Google News link)"
-              pdf.set_font("DejaVuBold", "", 9)
-              pdf.set_text_color(30, 30, 30)
-              pdf.cell(0, 6, "Article URL:",
-                       new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              # URL
+              pdf.set_draw_color(220, 220, 220)
+              pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+              pdf.ln(4)
+              add_text(pdf, "Article URL:", bold=True, size=9, color=(30,30,30), lh=6)
+              display_url = real_url if "google.com" not in real_url else item.get("link", "")
               pdf.set_font("DejaVu", "", 9)
-              pdf.set_text_color(0, 80, 180)
-              for chunk in textwrap.wrap(display_url, width=95):
+              pdf.set_text_color(0, 70, 160)
+              for chunk in textwrap.wrap(display_url, width=100):
                   pdf.cell(0, 5, chunk, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.ln(5)
 
-              # Article body
-              pdf.set_draw_color(200, 200, 200)
+              # Content
+              pdf.set_draw_color(220, 220, 220)
               pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-              pdf.ln(5)
+              pdf.ln(4)
 
               if article_text:
-                  pdf.set_font("DejaVuBold", "", 10)
-                  pdf.set_text_color(30, 30, 30)
-                  pdf.cell(0, 7, "Article content:",
-                           new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                  add_text(pdf, "Full article content:", bold=True, size=10, color=(30,30,30), lh=6)
                   pdf.ln(2)
-                  add_text_block(pdf, article_text, size=10,
-                                 color=(40, 40, 40), width=90, line_height=6)
+                  add_text(pdf, article_text, size=10, color=(40,40,40), width=92, lh=6)
               else:
                   snippet = (item.get("snippet") or "").strip()
                   if snippet:
-                      pdf.set_font("DejaVuBold", "", 10)
-                      pdf.set_text_color(30, 30, 30)
-                      pdf.cell(0, 7, "Article snippet (full text unavailable):",
-                               new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                      add_text(pdf, "Article snippet:", bold=True, size=10, color=(30,30,30), lh=6)
                       pdf.ln(2)
-                      add_text_block(pdf, snippet, size=10,
-                                     color=(80, 80, 80), width=90, line_height=6)
+                      add_text(pdf, snippet, size=10, color=(80,80,80), width=92, lh=6)
                   else:
-                      pdf.set_font("DejaVu", "", 9)
-                      pdf.set_text_color(130, 130, 130)
-                      pdf.cell(0, 6, "Full text unavailable. Visit the article URL above.",
-                               new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                      add_text(pdf, "No content available. Visit the article URL above.",
+                               size=9, color=(130,130,130), lh=6)
 
               # Footer
-              pdf.set_y(-18)
-              pdf.set_font("DejaVu", "", 8)
-              pdf.set_text_color(160, 160, 160)
-              pdf.cell(0, 6,
-                       f"Generated by GFV News Monitor  |  {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}",
+              pdf.set_y(-16)
+              pdf.set_draw_color(220, 220, 220)
+              pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+              pdf.ln(2)
+              pdf.set_font("DejaVu", "", 7)
+              pdf.set_text_color(170, 170, 170)
+              pdf.cell(0, 5,
+                       f"GFV News Monitor  ·  {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}",
                        new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
               tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
               pdf.output(tmp.name)
               return tmp.name
 
-          def upload_to_drive(service, pdf_path: str, filename: str, folder_id: str) -> str:
+          def upload_to_drive(service, pdf_path, filename, folder_id):
               meta = {"name": filename, "parents": [folder_id]}
               media = MediaFileUpload(pdf_path, mimetype="application/pdf", resumable=False)
               f = service.files().create(
-                  body=meta,
-                  media_body=media,
-                  fields="id",
-                  supportsAllDrives=True,
-              ).execute()
+                  body=meta, media_body=media, fields="id",
+                  supportsAllDrives=True).execute()
               file_id = f["id"]
               service.permissions().create(
                   fileId=file_id,
                   body={"type": "anyone", "role": "reader"},
-                  supportsAllDrives=True,
-              ).execute()
+                  supportsAllDrives=True).execute()
               return f"https://drive.google.com/file/d/{file_id}/view"
 
           # ── main ─────────────────────────────────────────────────────────────
 
           token        = clean_secret(os.environ.get("NOTION_TOKEN"))
-          db_raw       = clean_secret(os.environ.get("NOTION_DATABASE_ID")).replace("-", "")
-          sa_json      = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+          db_raw       = clean_secret(os.environ.get("NOTION_DATABASE_ID")).replace("-","")
+          sa_json      = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON","").strip()
           drive_folder = clean_secret(os.environ.get("GOOGLE_DRIVE_FOLDER_ID"))
+          scraper_key  = clean_secret(os.environ.get("SCRAPER_API_KEY"))
 
-          if not token:
-              raise RuntimeError("Missing GitHub secret: NOTION_TOKEN")
+          if not token: raise RuntimeError("Missing NOTION_TOKEN")
           if not re.fullmatch(r"[0-9a-fA-F]{32}", db_raw):
-              raise RuntimeError(f"NOTION_DATABASE_ID invalid. Got length={len(db_raw)}")
-          if not sa_json:
-              raise RuntimeError("Missing GitHub secret: GOOGLE_SERVICE_ACCOUNT_JSON")
-          if not drive_folder:
-              raise RuntimeError("Missing GitHub secret: GOOGLE_DRIVE_FOLDER_ID")
+              raise RuntimeError(f"NOTION_DATABASE_ID invalid: length={len(db_raw)}")
+          if not sa_json: raise RuntimeError("Missing GOOGLE_SERVICE_ACCOUNT_JSON")
+          if not drive_folder: raise RuntimeError("Missing GOOGLE_DRIVE_FOLDER_ID")
+          if not scraper_key: raise RuntimeError("Missing SCRAPER_API_KEY")
 
           db_id = f"{db_raw[0:8]}-{db_raw[8:12]}-{db_raw[12:16]}-{db_raw[16:20]}-{db_raw[20:32]}"
-
-          headers = {
+          notion_headers = {
               "Authorization": f"Bearer {token}",
               "Notion-Version": "2022-06-28",
               "Content-Type": "application/json",
           }
 
-          pre = requests.get(f"https://api.notion.com/v1/databases/{db_id}", headers=headers, timeout=30)
+          pre = requests.get(f"https://api.notion.com/v1/databases/{db_id}",
+                             headers=notion_headers, timeout=30)
           if pre.status_code != 200:
               raise RuntimeError(f"Notion preflight failed: {pre.status_code}\n{pre.text}")
 
           drive_svc = build_drive_service(sa_json)
 
-          with open("feed.json", "r", encoding="utf-8") as f:
-              feed = json.load(f)
-          items = feed.get("items", [])
+          with open("feed.json","r",encoding="utf-8") as f:
+              items = json.load(f).get("items",[])
 
           existing_urls = set()
-          start_cursor = None
+          cursor = None
           for _ in range(50):
-              payload = {"page_size": 100}
-              if start_cursor:
-                  payload["start_cursor"] = start_cursor
-              r = requests.post(
-                  f"https://api.notion.com/v1/databases/{db_id}/query",
-                  headers=headers, json=payload, timeout=30
-              )
+              body = {"page_size": 100}
+              if cursor: body["start_cursor"] = cursor
+              r = requests.post(f"https://api.notion.com/v1/databases/{db_id}/query",
+                                headers=notion_headers, json=body, timeout=30)
               if r.status_code != 200:
                   raise RuntimeError(f"Notion query failed: {r.status_code}\n{r.text}")
               data = r.json()
-              for page in data.get("results", []):
-                  u = (page.get("properties", {}).get("URL", {}) or {}).get("url")
-                  if u:
-                      existing_urls.add(u)
-              if not data.get("has_more"):
-                  break
-              start_cursor = data.get("next_cursor")
+              for page in data.get("results",[]):
+                  u = (page.get("properties",{}).get("URL",{}) or {}).get("url")
+                  if u: existing_urls.add(u)
+              if not data.get("has_more"): break
+              cursor = data.get("next_cursor")
 
           created = 0
           for it in items:
@@ -457,31 +370,25 @@ jobs:
               if not url or url in existing_urls:
                   continue
 
-              title   = (it.get("headline") or "Untitled")[:180]
-              source  = (it.get("source") or "")[:200]
-              query   = (it.get("query") or "")[:200]
-              iso     = it.get("pubDateISO")
+              title  = (it.get("headline") or "Untitled")[:180]
+              source = (it.get("source") or "")[:200]
+              query  = (it.get("query") or "")[:200]
+              iso    = it.get("pubDateISO")
 
-              # 1. Decode real URL
-              print(f"  Decoding URL for: {title[:60]}...")
-              real_url = decode_google_news_url(url)
+              print(f"\n  Processing: {title[:70]}...")
+
+              # Fetch via ScraperAPI
+              real_url, article_text = fetch_via_scraperapi(url, scraper_key)
               resolved = "google.com" not in real_url
-              print(f"  {'✓ Resolved' if resolved else '✗ Still Google URL'}: {real_url[:80]}")
+              print(f"  URL: {'✓ ' + real_url[:70] if resolved else '✗ unresolved'}")
+              print(f"  Text: {len(article_text)} chars" if article_text else "  Text: none")
 
-              # 2. Fetch full article text
-              article_text = fetch_article_text(real_url)
-              if article_text:
-                  print(f"  Got {len(article_text)} chars of article text")
-              else:
-                  print(f"  No article text (paywall/JS-heavy, using snippet)")
-
-              # 3. Generate PDF
+              # Generate PDF
               pdf_path = make_pdf(it, real_url, article_text)
 
-              # 4. Upload to Drive
+              # Upload to Drive
               safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:80]
-              date_prefix = (iso or "")[:10]
-              filename = f"{date_prefix} - {safe_title}.pdf"
+              filename = f"{(iso or '')[:10]} - {safe_title}.pdf"
               try:
                   drive_url = upload_to_drive(drive_svc, pdf_path, filename, drive_folder)
               except Exception as e:
@@ -490,7 +397,7 @@ jobs:
               finally:
                   os.unlink(pdf_path)
 
-              # 5. Create Notion row
+              # Create Notion row
               props = {
                   "Name":   {"title": [{"text": {"content": title}}]},
                   "URL":    {"url": url},
@@ -502,21 +409,17 @@ jobs:
               if drive_url:
                   props["PDF"] = {"url": drive_url}
 
-              c = requests.post(
-                  "https://api.notion.com/v1/pages",
-                  headers=headers,
-                  json={"parent": {"database_id": db_id}, "properties": props},
-                  timeout=30,
-              )
+              c = requests.post("https://api.notion.com/v1/pages",
+                                headers=notion_headers,
+                                json={"parent": {"database_id": db_id}, "properties": props},
+                                timeout=30)
               if c.status_code != 200:
                   raise RuntimeError(f"Notion create failed: {c.status_code}\n{c.text}")
 
               existing_urls.add(url)
               created += 1
-              print(f"  ✓ Created: {title[:60]}{'...' if len(title)>60 else ''}")
-              if drive_url:
-                  print(f"    PDF: {drive_url}")
-              time.sleep(0.35)
+              print(f"  ✓ Row created | PDF: {drive_url or 'none'}")
+              time.sleep(0.5)
 
-          print(f"\nNotion sync complete: created={created}, existing={len(existing_urls)}")
+          print(f"\nDone: created={created}, existing={len(existing_urls)}")
           PY
