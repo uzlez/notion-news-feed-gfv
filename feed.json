@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-25T09:32:06.878826+00:00",
+  "generatedAt": "2026-02-25T09:34:10.904442+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon - Kyiv Post",
@@ -39,6 +39,16 @@
       "pubDate": "Sun, 25 Jan 2026 08:00:00 GMT",
       "pubDateISO": "2026-01-25T08:00:00+00:00",
       "snippet": "Investment in Ukrainian defense tech tops $100 million in 2025 The New Voice of Ukraine",
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
+    },
+    {
+      "headline": "United to win: UCDI Investor Club Platform launches in Ukraine to attract investment in military technology - Рубрика",
+      "source": "Рубрика",
+      "source_url": "https://rubryka.com",
+      "link": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE5USmhQNFRRaHZPOTFSWks2SmZvWEZFNVYybjA4LXhNZE85LV9Jdlp3dHBmWXlHUjBwRV9HME1jdnpjNXlGaHd0cFdhYVVXTS1jdF9VTUllTzBxbUI2S1NQYmhpbw?oc=5",
+      "pubDate": "Fri, 16 Jan 2026 20:17:36 GMT",
+      "pubDateISO": "2026-01-16T20:17:36+00:00",
+      "snippet": "United to win: UCDI Investor Club Platform launches in Ukraine to attract investment in military technology Рубрика",
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
