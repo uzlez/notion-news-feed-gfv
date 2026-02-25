@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-25T16:08:43.832059+00:00",
+  "generatedAt": "2026-02-25T18:01:26.428608+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -180,6 +180,16 @@
       "pubDateISO": "2025-09-16T07:00:00+00:00",
       "snippet": "Swarmer raises $15M — Record for Ukrainian Defense Tech Scroll.media",
       "query": "\"Green Flag Ventures\""
+    },
+    {
+      "headline": "Ukrainian startup Swarmer raises $15 million in funding",
+      "source": "en.ain.ua",
+      "source_url": "https://en.ain.ua",
+      "link": "https://news.google.com/rss/articles/CBMiXEFVX3lxTFBvdlZmNWtMLUxFTE9kRHZITUZUTVQ3SC1Ja3pLcERSUmhsSmRCQUV0OE95VHZFQkZSbWdNaTlqY0RTMURqdUxibEkzTnV0cTQ4dmFoR2dKM0VVSHhB?oc=5",
+      "pubDate": "Tue, 16 Sep 2025 07:00:00 GMT",
+      "pubDateISO": "2025-09-16T07:00:00+00:00",
+      "snippet": "Ukrainian startup Swarmer raises $15 million in funding en.ain.ua",
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
       "headline": "Swarmer, developer of AI solutions for drone swarms, raises $15M — a record for a Ukrainian defence startup scene",
