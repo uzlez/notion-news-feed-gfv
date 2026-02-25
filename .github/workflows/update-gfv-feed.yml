@@ -3,7 +3,7 @@ name: Update feed.json (GFV mentions)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 * * * *"
 
 concurrency:
   group: notion-news-feed-gfv
@@ -20,34 +20,31 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch Google News RSS and write feed.json
+      - name: Fetch news and write feed.json
+        env:
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
         run: |
           python3 - << 'PY'
-          import json, re, urllib.parse, urllib.request
-          import xml.etree.ElementTree as ET
+          import json, re, os, urllib.parse, urllib.request
           from datetime import datetime, timezone, timedelta
-          from email.utils import parsedate_to_datetime
 
           MAX_ITEMS = 200
-          MAX_AGE_DAYS = 180
-          HL = "en-GB"
-          GL = "GB"
-          CEID = "GB:en"
+          MAX_AGE_DAYS = 30  # NewsAPI free tier only goes back 30 days
+
+          api_key = os.environ.get("NEWS_API_KEY", "").strip()
+          if not api_key:
+              raise RuntimeError("Missing NEWS_API_KEY")
 
           QUERIES = [
-              '"Green Flag Ventures"',
-              '"Justin Zeefe"',
-              '"Deborah Fairlamb"',
-              'GFV -("gross floor value") -("good faith violation") -("gross floor")',
-              '("Green Flag Ventures" OR "Justin Zeefe" OR "Deborah Fairlamb" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)',
+              "Green Flag Ventures",
+              "Justin Zeefe",
+              "Deborah Fairlamb",
           ]
 
           cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
-          cutoff_date = cutoff.date().isoformat()
 
           def clean_html(s):
               if not s: return ""
-              s = re.sub(r"<br\s*/?>", " ", s, flags=re.I)
               s = re.sub(r"<[^>]+>", "", s)
               s = re.sub(r"&nbsp;", " ", s)
               s = re.sub(r"&amp;", "&", s)
@@ -57,59 +54,65 @@ jobs:
               s = re.sub(r"&#?\w+;", "", s)
               return re.sub(r"\s+", " ", s).strip()
 
-          def parse_pubdate(s):
-              try:
-                  dt = parsedate_to_datetime(s)
-                  if dt.tzinfo is None:
-                      dt = dt.replace(tzinfo=timezone.utc)
-                  return dt.astimezone(timezone.utc)
-              except Exception:
-                  return None
-
           items = []
           for q in QUERIES:
-              q2 = f"{q} after:{cutoff_date}"
-              url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({
-                  "q": q2, "hl": HL, "gl": GL, "ceid": CEID,
+              url = "https://newsapi.org/v2/everything?" + urllib.parse.urlencode({
+                  "q": q,
+                  "language": "en",
+                  "sortBy": "publishedAt",
+                  "pageSize": 100,
+                  "from": cutoff.strftime("%Y-%m-%d"),
+                  "apiKey": api_key,
               })
               try:
                   with urllib.request.urlopen(url, timeout=30) as resp:
-                      xml = resp.read()
+                      data = json.loads(resp.read())
               except Exception as e:
-                  print("Fetch failed:", q, e)
+                  print(f"NewsAPI fetch failed for '{q}': {e}")
                   continue
 
-              root = ET.fromstring(xml)
-              channel = root.find("channel")
-              if channel is None: continue
+              if data.get("status") != "ok":
+                  print(f"NewsAPI error for '{q}': {data.get('message')}")
+                  continue
 
-              for it in channel.findall("item"):
-                  title = (it.findtext("title") or "").strip()
-                  link = (it.findtext("link") or "").strip()
-                  pub = (it.findtext("pubDate") or "").strip()
-                  src_el = it.find("source")
-                  source = (src_el.text or "").strip() if src_el is not None else ""
-                  src_url = src_el.get("url", "") if src_el is not None else ""
-                  desc = clean_html((it.findtext("description") or "").strip())
+              articles = data.get("articles", [])
+              print(f"  '{q}': {len(articles)} articles")
 
-                  dt = parse_pubdate(pub)
-                  if not dt or dt < cutoff: continue
+              for art in articles:
+                  title   = clean_html(art.get("title") or "")
+                  link    = art.get("url") or ""
+                  pub     = art.get("publishedAt") or ""
+                  source  = (art.get("source") or {}).get("name") or ""
+                  desc    = clean_html(art.get("description") or "")
+                  content = clean_html(art.get("content") or "")
+
+                  if not link or not title:
+                      continue
+                  if "[Removed]" in title:
+                      continue
+
+                  try:
+                      dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+                  except Exception:
+                      continue
+                  if dt < cutoff:
+                      continue
 
                   items.append({
                       "headline": title,
                       "source": source,
-                      "source_url": src_url,
                       "link": link,
                       "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
                       "pubDateISO": dt.isoformat(),
                       "snippet": desc,
+                      "content": content,
                       "query": q,
                   })
 
           seen = set()
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
-              key = x["link"] or (x["headline"] + "|" + x["pubDate"])
+              key = x["link"]
               if key in seen: continue
               seen.add(key)
               out.append(x)
@@ -118,7 +121,7 @@ jobs:
           payload = {"generatedAt": datetime.now(timezone.utc).isoformat(), "items": out}
           with open("feed.json", "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False, indent=2)
-          print("Wrote", len(out), "items")
+          print(f"Wrote {len(out)} items")
           PY
 
       - name: Commit feed.json
@@ -158,56 +161,49 @@ jobs:
           FONT_REGULAR = "/tmp/fonts/DejaVuSans.ttf"
           FONT_BOLD    = "/tmp/fonts/DejaVuSans-Bold.ttf"
 
-          # ── helpers ──────────────────────────────────────────────────────────
-
           def clean_secret(s):
               return (s or "").strip().strip('"').strip("'").replace("\n","").replace("\r","").replace("\t","").strip()
 
-          def fetch_via_scraperapi(gn_url, api_key):
+          def fetch_full_article(url, scraper_key):
               """
-              Use ScraperAPI to fetch the Google News URL.
-              ScraperAPI follows the redirect from a residential IP and returns
-              the real article HTML. We then extract the final URL and text.
+              Fetch real article via ScraperAPI (works on real URLs, not Google News).
+              Falls back to direct trafilatura fetch.
               """
-              scraper_url = "https://api.scraperapi.com"
-              params = {
-                  "api_key": api_key,
-                  "url": gn_url,
-                  "follow_redirect": "true",
-                  "render": "false",
-              }
+              # Try ScraperAPI first
+              if scraper_key:
+                  try:
+                      resp = requests.get(
+                          "https://api.scraperapi.com",
+                          params={"api_key": scraper_key, "url": url, "render": "false"},
+                          timeout=60,
+                      )
+                      if resp.status_code == 200 and len(resp.text) > 500:
+                          text = trafilatura.extract(
+                              resp.text,
+                              include_comments=False,
+                              include_tables=False,
+                              favor_recall=True,
+                          ) or ""
+                          if text.strip():
+                              return text.strip()
+                  except Exception as e:
+                      print(f"  ScraperAPI error: {e}")
+
+              # Fallback: direct trafilatura fetch
               try:
-                  resp = requests.get(scraper_url, params=params, timeout=60)
-                  if resp.status_code != 200:
-                      print(f"  ScraperAPI returned {resp.status_code}")
-                      return gn_url, ""
-
-                  html = resp.text
-                  # Get the real URL from response headers or content
-                  real_url = resp.url
-                  # Try to find canonical URL in HTML
-                  canon = re.search(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\']', html)
-                  if canon:
-                      real_url = canon.group(1)
-                  elif "google.com" in real_url:
-                      # Try og:url
-                      og = re.search(r'<meta[^>]+property=["\']og:url["\'][^>]+content=["\']([^"\']+)["\']', html)
-                      if og:
-                          real_url = og.group(1)
-
-                  # Extract article text
-                  article_text = trafilatura.extract(
-                      html,
-                      include_comments=False,
-                      include_tables=False,
-                      favor_recall=True,
-                  ) or ""
-
-                  return real_url, article_text.strip()
-
+                  downloaded = trafilatura.fetch_url(url)
+                  if downloaded:
+                      text = trafilatura.extract(
+                          downloaded,
+                          include_comments=False,
+                          include_tables=False,
+                          favor_recall=True,
+                      ) or ""
+                      return text.strip()
               except Exception as e:
-                  print(f"  ScraperAPI error: {e}")
-                  return gn_url, ""
+                  print(f"  trafilatura error: {e}")
+
+              return ""
 
           def build_drive_service(sa_json):
               info = json.loads(sa_json)
@@ -226,7 +222,7 @@ jobs:
                   for line in textwrap.wrap(para, width=width) or [""]:
                       pdf.cell(0, lh, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-          def make_pdf(item, real_url, article_text):
+          def make_pdf(item, article_text):
               pdf = FPDF()
               pdf.set_auto_page_break(auto=True, margin=15)
               pdf.add_font("DejaVu", "", FONT_REGULAR)
@@ -248,13 +244,10 @@ jobs:
               pdf.ln(4)
 
               # Meta
-              source = item.get("source") or ""
-              pub    = item.get("pubDate") or ""
-              query  = item.get("query") or ""
               pdf.set_font("DejaVu", "", 9)
               pdf.set_text_color(120, 120, 120)
-              pdf.cell(0, 5, f"{source}  ·  {pub}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              pdf.cell(0, 5, f"Query: {query}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              pdf.cell(0, 5, f"{item.get('source','')}  ·  {item.get('pubDate','')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              pdf.cell(0, 5, f"Query: {item.get('query','')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.ln(5)
 
               # URL
@@ -262,10 +255,9 @@ jobs:
               pdf.line(10, pdf.get_y(), 200, pdf.get_y())
               pdf.ln(4)
               add_text(pdf, "Article URL:", bold=True, size=9, color=(30,30,30), lh=6)
-              display_url = real_url if "google.com" not in real_url else item.get("link", "")
               pdf.set_font("DejaVu", "", 9)
               pdf.set_text_color(0, 70, 160)
-              for chunk in textwrap.wrap(display_url, width=100):
+              for chunk in textwrap.wrap(item.get("link",""), width=100):
                   pdf.cell(0, 5, chunk, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.ln(5)
 
@@ -274,19 +266,17 @@ jobs:
               pdf.line(10, pdf.get_y(), 200, pdf.get_y())
               pdf.ln(4)
 
-              if article_text:
-                  add_text(pdf, "Full article content:", bold=True, size=10, color=(30,30,30), lh=6)
+              # Use full article if available, then NewsAPI content, then snippet
+              body = article_text or item.get("content","").strip() or item.get("snippet","").strip()
+              label = "Full article:" if article_text else ("Article preview:" if item.get("content") else "Snippet:")
+
+              if body:
+                  add_text(pdf, label, bold=True, size=10, color=(30,30,30), lh=6)
                   pdf.ln(2)
-                  add_text(pdf, article_text, size=10, color=(40,40,40), width=92, lh=6)
+                  add_text(pdf, body, size=10, color=(40,40,40), width=92, lh=6)
               else:
-                  snippet = (item.get("snippet") or "").strip()
-                  if snippet:
-                      add_text(pdf, "Article snippet:", bold=True, size=10, color=(30,30,30), lh=6)
-                      pdf.ln(2)
-                      add_text(pdf, snippet, size=10, color=(80,80,80), width=92, lh=6)
-                  else:
-                      add_text(pdf, "No content available. Visit the article URL above.",
-                               size=9, color=(130,130,130), lh=6)
+                  add_text(pdf, "No content available. Visit the article URL above.",
+                           size=9, color=(130,130,130), lh=6)
 
               # Footer
               pdf.set_y(-16)
@@ -295,8 +285,7 @@ jobs:
               pdf.ln(2)
               pdf.set_font("DejaVu", "", 7)
               pdf.set_text_color(170, 170, 170)
-              pdf.cell(0, 5,
-                       f"GFV News Monitor  ·  {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}",
+              pdf.cell(0, 5, f"GFV News Monitor  ·  {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}",
                        new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
               tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
@@ -329,7 +318,6 @@ jobs:
               raise RuntimeError(f"NOTION_DATABASE_ID invalid: length={len(db_raw)}")
           if not sa_json: raise RuntimeError("Missing GOOGLE_SERVICE_ACCOUNT_JSON")
           if not drive_folder: raise RuntimeError("Missing GOOGLE_DRIVE_FOLDER_ID")
-          if not scraper_key: raise RuntimeError("Missing SCRAPER_API_KEY")
 
           db_id = f"{db_raw[0:8]}-{db_raw[8:12]}-{db_raw[12:16]}-{db_raw[16:20]}-{db_raw[20:32]}"
           notion_headers = {
@@ -377,16 +365,12 @@ jobs:
 
               print(f"\n  Processing: {title[:70]}...")
 
-              # Fetch via ScraperAPI
-              real_url, article_text = fetch_via_scraperapi(url, scraper_key)
-              resolved = "google.com" not in real_url
-              print(f"  URL: {'✓ ' + real_url[:70] if resolved else '✗ unresolved'}")
-              print(f"  Text: {len(article_text)} chars" if article_text else "  Text: none")
+              # Fetch full article from real URL via ScraperAPI
+              article_text = fetch_full_article(url, scraper_key)
+              print(f"  Text: {len(article_text)} chars" if article_text else "  Text: none (using NewsAPI content/snippet)")
 
-              # Generate PDF
-              pdf_path = make_pdf(it, real_url, article_text)
+              pdf_path = make_pdf(it, article_text)
 
-              # Upload to Drive
               safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:80]
               filename = f"{(iso or '')[:10]} - {safe_title}.pdf"
               try:
@@ -397,7 +381,6 @@ jobs:
               finally:
                   os.unlink(pdf_path)
 
-              # Create Notion row
               props = {
                   "Name":   {"title": [{"text": {"content": title}}]},
                   "URL":    {"url": url},
