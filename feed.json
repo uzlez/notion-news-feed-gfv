@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-25T10:00:37.413278+00:00",
+  "generatedAt": "2026-02-25T10:07:28.157126+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -92,6 +92,16 @@
       "query": "\"Green Flag Ventures\""
     },
     {
+      "headline": "At Ukraine’s Top Tech Event, Faster and Cheaper Rule",
+      "source": "IEEE Spectrum",
+      "source_url": "https://spectrum.ieee.org",
+      "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5GMFloVmlvaGNyTU9pUWpmNWxlTXBXSzJPcW02bjJEc0E4ajRVQ2JGV3ZGd01veGN2Zll5YTcyek40TUF6dUlvZmVFV05QOWdDVDRV0gFnQVVfeXFMT3FqanFJQ0NpZEFXU2NEZVlkdDc1ckllZkdNQy1sTDZIVm00dUNWdHlrQzBWZEZEMmJWbFphYUpyOGE2ai0zTFNXUGdfOGk1S2lfSmx6cVNGaWVFcm1PaTNldmFlbkJ1TQ?oc=5",
+      "pubDate": "Mon, 10 Nov 2025 08:00:00 GMT",
+      "pubDateISO": "2025-11-10T08:00:00+00:00",
+      "snippet": "At Ukraine’s Top Tech Event, Faster and Cheaper Rule IEEE Spectrum",
+      "query": "\"Justin Zeefe\""
+    },
+    {
       "headline": "Made in Ukraine: WSJ reveals how drone makers attract millions from the West",
       "source": "RBC-Ukraine",
       "source_url": "https://newsukraine.rbc.ua",
@@ -149,7 +159,7 @@
       "pubDate": "Tue, 30 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-30T07:00:00+00:00",
       "snippet": "Kyiv Independent reporter moderates a panel on Ukraine’s defense industry at IT Arena 2025 The Kyiv Independent",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
+      "query": "\"Justin Zeefe\""
     },
     {
       "headline": "11 Startups Secure Over $2.8M at IT Arena 2025",
