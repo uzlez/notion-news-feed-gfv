@@ -20,31 +20,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch news and write feed.json
-        env:
-          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+      - name: Fetch Google News RSS and write feed.json
         run: |
           python3 - << 'PY'
-          import json, re, os, urllib.parse, urllib.request
+          import json, re, urllib.parse, urllib.request
+          import xml.etree.ElementTree as ET
           from datetime import datetime, timezone, timedelta
+          from email.utils import parsedate_to_datetime
 
           MAX_ITEMS = 200
-          MAX_AGE_DAYS = 30  # NewsAPI free tier only goes back 30 days
-
-          api_key = os.environ.get("NEWS_API_KEY", "").strip()
-          if not api_key:
-              raise RuntimeError("Missing NEWS_API_KEY")
+          MAX_AGE_DAYS = 180
+          HL = "en-GB"
+          GL = "GB"
+          CEID = "GB:en"
 
           QUERIES = [
-              "Green Flag Ventures",
-              "Justin Zeefe",
-              "Deborah Fairlamb",
+              '"Green Flag Ventures"',
+              '"Justin Zeefe"',
+              '"Deborah Fairlamb"',
+              'GFV -("gross floor value") -("good faith violation") -("gross floor")',
+              '("Green Flag Ventures" OR "Justin Zeefe" OR "Deborah Fairlamb" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)',
           ]
 
           cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+          cutoff_date = cutoff.date().isoformat()
 
           def clean_html(s):
               if not s: return ""
+              s = re.sub(r"<br\s*/?>", " ", s, flags=re.I)
               s = re.sub(r"<[^>]+>", "", s)
               s = re.sub(r"&nbsp;", " ", s)
               s = re.sub(r"&amp;", "&", s)
@@ -54,58 +57,56 @@ jobs:
               s = re.sub(r"&#?\w+;", "", s)
               return re.sub(r"\s+", " ", s).strip()
 
+          def parse_pubdate(s):
+              try:
+                  dt = parsedate_to_datetime(s)
+                  if dt.tzinfo is None:
+                      dt = dt.replace(tzinfo=timezone.utc)
+                  return dt.astimezone(timezone.utc)
+              except Exception:
+                  return None
+
           items = []
           for q in QUERIES:
-              url = "https://newsapi.org/v2/everything?" + urllib.parse.urlencode({
-                  "q": q,
-                  "language": "en",
-                  "sortBy": "publishedAt",
-                  "pageSize": 100,
-                  "from": cutoff.strftime("%Y-%m-%d"),
-                  "apiKey": api_key,
+              q2 = f"{q} after:{cutoff_date}"
+              url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({
+                  "q": q2, "hl": HL, "gl": GL, "ceid": CEID,
               })
               try:
                   with urllib.request.urlopen(url, timeout=30) as resp:
-                      data = json.loads(resp.read())
+                      xml = resp.read()
               except Exception as e:
-                  print(f"NewsAPI fetch failed for '{q}': {e}")
+                  print(f"Fetch failed for '{q}': {e}")
                   continue
 
-              if data.get("status") != "ok":
-                  print(f"NewsAPI error for '{q}': {data.get('message')}")
-                  continue
+              root = ET.fromstring(xml)
+              channel = root.find("channel")
+              if channel is None: continue
 
-              articles = data.get("articles", [])
-              print(f"  '{q}': {len(articles)} articles")
+              for it in channel.findall("item"):
+                  title   = clean_html((it.findtext("title") or "").strip())
+                  link    = (it.findtext("link") or "").strip()
+                  pub     = (it.findtext("pubDate") or "").strip()
+                  src_el  = it.find("source")
+                  source  = clean_html((src_el.text or "").strip()) if src_el is not None else ""
+                  src_url = (src_el.get("url") or "").strip() if src_el is not None else ""
+                  desc    = clean_html((it.findtext("description") or "").strip())
 
-              for art in articles:
-                  title   = clean_html(art.get("title") or "")
-                  link    = art.get("url") or ""
-                  pub     = art.get("publishedAt") or ""
-                  source  = (art.get("source") or {}).get("name") or ""
-                  desc    = clean_html(art.get("description") or "")
-                  content = clean_html(art.get("content") or "")
+                  dt = parse_pubdate(pub)
+                  if not dt or dt < cutoff: continue
 
-                  if not link or not title:
-                      continue
-                  if "[Removed]" in title:
-                      continue
-
-                  try:
-                      dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
-                  except Exception:
-                      continue
-                  if dt < cutoff:
-                      continue
+                  # Clean up title — Google News appends " - Source Name" at the end
+                  if source and title.endswith(f" - {source}"):
+                      title = title[: -(len(source) + 3)].strip()
 
                   items.append({
                       "headline": title,
                       "source": source,
+                      "source_url": src_url,
                       "link": link,
                       "pubDate": dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
                       "pubDateISO": dt.isoformat(),
                       "snippet": desc,
-                      "content": content,
                       "query": q,
                   })
 
@@ -164,46 +165,66 @@ jobs:
           def clean_secret(s):
               return (s or "").strip().strip('"').strip("'").replace("\n","").replace("\r","").replace("\t","").strip()
 
-          def fetch_full_article(url, scraper_key):
+          def try_fetch_article(source_url, headline, scraper_key):
               """
-              Fetch real article via ScraperAPI (works on real URLs, not Google News).
-              Falls back to direct trafilatura fetch.
+              Try to find and fetch the real article from the publisher's site.
+              Uses ScraperAPI to search the source domain for the headline.
+              Returns (real_url, article_text) or ("", "").
               """
-              # Try ScraperAPI first
-              if scraper_key:
-                  try:
-                      resp = requests.get(
-                          "https://api.scraperapi.com",
-                          params={"api_key": scraper_key, "url": url, "render": "false"},
-                          timeout=60,
-                      )
-                      if resp.status_code == 200 and len(resp.text) > 500:
-                          text = trafilatura.extract(
-                              resp.text,
-                              include_comments=False,
-                              include_tables=False,
-                              favor_recall=True,
-                          ) or ""
-                          if text.strip():
-                              return text.strip()
-                  except Exception as e:
-                      print(f"  ScraperAPI error: {e}")
+              if not source_url or not scraper_key:
+                  return "", ""
 
-              # Fallback: direct trafilatura fetch
+              # Build a site-specific Google search URL
+              domain = re.sub(r"https?://", "", source_url).rstrip("/")
+              # Take first 6 words of headline for search
+              keywords = " ".join(headline.split()[:6])
+              search_url = f"https://www.google.com/search?q=site:{domain}+{requests.utils.quote(keywords)}"
+
               try:
-                  downloaded = trafilatura.fetch_url(url)
-                  if downloaded:
+                  resp = requests.get(
+                      "https://api.scraperapi.com",
+                      params={"api_key": scraper_key, "url": search_url, "render": "false"},
+                      timeout=45,
+                  )
+                  if resp.status_code != 200:
+                      return "", ""
+
+                  # Find article URLs in Google search results
+                  matches = re.findall(
+                      rf'href="(https?://{re.escape(domain)}/[^"]+)"',
+                      resp.text
+                  )
+                  if not matches:
+                      # Try without domain filter
+                      matches = re.findall(r'/url\?q=(https?://[^&"]+)', resp.text)
+
+                  if not matches:
+                      return "", ""
+
+                  # Take the first plausible article URL
+                  article_url = matches[0]
+                  article_url = urllib.parse.unquote(article_url) if "%3A" in article_url else article_url
+
+                  # Now fetch that article
+                  resp2 = requests.get(
+                      "https://api.scraperapi.com",
+                      params={"api_key": scraper_key, "url": article_url, "render": "false"},
+                      timeout=45,
+                  )
+                  if resp2.status_code == 200 and len(resp2.text) > 500:
                       text = trafilatura.extract(
-                          downloaded,
+                          resp2.text,
                           include_comments=False,
                           include_tables=False,
                           favor_recall=True,
                       ) or ""
-                      return text.strip()
-              except Exception as e:
-                  print(f"  trafilatura error: {e}")
+                      if text.strip():
+                          return article_url, text.strip()
 
-              return ""
+              except Exception as e:
+                  print(f"  Article fetch error: {e}")
+
+              return "", ""
 
           def build_drive_service(sa_json):
               info = json.loads(sa_json)
@@ -222,70 +243,104 @@ jobs:
                   for line in textwrap.wrap(para, width=width) or [""]:
                       pdf.cell(0, lh, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-          def make_pdf(item, article_text):
+          def make_pdf(item, real_url, article_text):
               pdf = FPDF()
               pdf.set_auto_page_break(auto=True, margin=15)
               pdf.add_font("DejaVu", "", FONT_REGULAR)
               pdf.add_font("DejaVuBold", "", FONT_BOLD)
               pdf.add_page()
 
-              # Header
+              # ── Header ──
               pdf.set_fill_color(20, 40, 80)
-              pdf.rect(0, 0, 210, 20, "F")
-              pdf.set_font("DejaVuBold", "", 12)
+              pdf.rect(0, 0, 210, 22, "F")
+              pdf.set_font("DejaVuBold", "", 11)
               pdf.set_text_color(255, 255, 255)
-              pdf.set_xy(8, 5)
-              pdf.cell(0, 10, "GFV News Archive", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              pdf.ln(8)
+              pdf.set_xy(10, 4)
+              pdf.cell(130, 7, "GFV News Archive", new_x=XPos.RIGHT, new_y=YPos.TOP)
+              # Date top-right
+              pdf.set_font("DejaVu", "", 9)
+              pdf.set_text_color(180, 200, 230)
+              pdf.set_xy(140, 4)
+              pdf.cell(60, 7, item.get("pubDate","")[:16], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              # Source sub-header
+              pdf.set_font("DejaVu", "", 9)
+              pdf.set_text_color(160, 185, 220)
+              pdf.set_xy(10, 13)
+              pdf.cell(0, 6, item.get("source",""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              pdf.ln(10)
 
-              # Headline
+              # ── Headline ──
               add_text(pdf, item.get("headline") or "Untitled",
-                       bold=True, size=14, color=(15,15,15), width=70, lh=8)
-              pdf.ln(4)
+                       bold=True, size=16, color=(10,10,40), width=68, lh=9)
+              pdf.ln(6)
 
-              # Meta
-              pdf.set_font("DejaVu", "", 9)
-              pdf.set_text_color(120, 120, 120)
-              pdf.cell(0, 5, f"{item.get('source','')}  ·  {item.get('pubDate','')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              pdf.cell(0, 5, f"Query: {item.get('query','')}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+              # ── Divider ──
+              pdf.set_draw_color(20, 40, 80)
+              pdf.set_line_width(0.5)
+              pdf.line(10, pdf.get_y(), 50, pdf.get_y())
+              pdf.set_line_width(0.2)
+              pdf.ln(6)
+
+              # ── URL ──
+              display_url = real_url if real_url else item.get("source_url","")
+              if display_url:
+                  pdf.set_font("DejaVuBold", "", 8)
+                  pdf.set_text_color(80, 80, 80)
+                  pdf.cell(18, 5, "Source:", new_x=XPos.RIGHT, new_y=YPos.TOP)
+                  pdf.set_font("DejaVu", "", 8)
+                  pdf.set_text_color(0, 70, 160)
+                  url_line = display_url[:100]
+                  pdf.cell(0, 5, url_line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                  pdf.ln(4)
+
+              # ── Content ──
+              pdf.set_draw_color(230, 230, 230)
+              pdf.line(10, pdf.get_y(), 200, pdf.get_y())
               pdf.ln(5)
 
-              # URL
-              pdf.set_draw_color(220, 220, 220)
-              pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-              pdf.ln(4)
-              add_text(pdf, "Article URL:", bold=True, size=9, color=(30,30,30), lh=6)
-              pdf.set_font("DejaVu", "", 9)
-              pdf.set_text_color(0, 70, 160)
-              for chunk in textwrap.wrap(item.get("link",""), width=100):
-                  pdf.cell(0, 5, chunk, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              pdf.ln(5)
-
-              # Content
-              pdf.set_draw_color(220, 220, 220)
-              pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-              pdf.ln(4)
-
-              # Use full article if available, then NewsAPI content, then snippet
-              body = article_text or item.get("content","").strip() or item.get("snippet","").strip()
-              label = "Full article:" if article_text else ("Article preview:" if item.get("content") else "Snippet:")
-
-              if body:
-                  add_text(pdf, label, bold=True, size=10, color=(30,30,30), lh=6)
-                  pdf.ln(2)
-                  add_text(pdf, body, size=10, color=(40,40,40), width=92, lh=6)
+              if article_text:
+                  add_text(pdf, article_text, size=10, color=(30,30,30), width=92, lh=6)
               else:
-                  add_text(pdf, "No content available. Visit the article URL above.",
-                           size=9, color=(130,130,130), lh=6)
+                  snippet = (item.get("snippet") or "").strip()
+                  if snippet:
+                      # Show snippet in a light box
+                      pdf.set_fill_color(248, 249, 252)
+                      y_before = pdf.get_y()
+                      pdf.set_font("DejaVu", "", 10)
+                      pdf.set_text_color(60, 60, 60)
+                      wrapped = []
+                      for para in snippet.split("\n"):
+                          para = para.strip()
+                          if para:
+                              wrapped.extend(textwrap.wrap(para, width=88) or [""])
+                          else:
+                              wrapped.append("")
+                      box_h = len(wrapped) * 6 + 8
+                      pdf.rect(8, y_before - 2, 194, box_h, "F")
+                      for line in wrapped:
+                          pdf.cell(0, 6, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                  else:
+                      pdf.set_font("DejaVu", "", 9)
+                      pdf.set_text_color(160, 160, 160)
+                      pdf.cell(0, 6, "No preview available — open the source URL to read the full article.",
+                               new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-              # Footer
-              pdf.set_y(-16)
-              pdf.set_draw_color(220, 220, 220)
+              # ── Query tag ──
+              pdf.ln(6)
+              pdf.set_font("DejaVu", "", 7)
+              pdf.set_text_color(160, 160, 160)
+              pdf.cell(0, 5, f"Matched query: {item.get('query','')}",
+                       new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+              # ── Footer ──
+              pdf.set_y(-14)
+              pdf.set_draw_color(200, 200, 200)
               pdf.line(10, pdf.get_y(), 200, pdf.get_y())
               pdf.ln(2)
               pdf.set_font("DejaVu", "", 7)
-              pdf.set_text_color(170, 170, 170)
-              pdf.cell(0, 5, f"GFV News Monitor  ·  {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}",
+              pdf.set_text_color(180, 180, 180)
+              pdf.cell(0, 5,
+                       f"GFV News Monitor  ·  Generated {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}",
                        new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
               tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
@@ -306,6 +361,8 @@ jobs:
               return f"https://drive.google.com/file/d/{file_id}/view"
 
           # ── main ─────────────────────────────────────────────────────────────
+
+          import urllib.parse
 
           token        = clean_secret(os.environ.get("NOTION_TOKEN"))
           db_raw       = clean_secret(os.environ.get("NOTION_DATABASE_ID")).replace("-","")
@@ -358,18 +415,22 @@ jobs:
               if not url or url in existing_urls:
                   continue
 
-              title  = (it.get("headline") or "Untitled")[:180]
-              source = (it.get("source") or "")[:200]
-              query  = (it.get("query") or "")[:200]
-              iso    = it.get("pubDateISO")
+              title      = (it.get("headline") or "Untitled")[:180]
+              source     = (it.get("source") or "")[:200]
+              source_url = it.get("source_url","")
+              query      = (it.get("query") or "")[:200]
+              iso        = it.get("pubDateISO")
 
               print(f"\n  Processing: {title[:70]}...")
 
-              # Fetch full article from real URL via ScraperAPI
-              article_text = fetch_full_article(url, scraper_key)
-              print(f"  Text: {len(article_text)} chars" if article_text else "  Text: none (using NewsAPI content/snippet)")
+              # Try to get full article via ScraperAPI + source domain search
+              real_url, article_text = try_fetch_article(source_url, title, scraper_key)
+              if article_text:
+                  print(f"  ✓ Got {len(article_text)} chars from {real_url[:60]}")
+              else:
+                  print(f"  → Using snippet/card layout")
 
-              pdf_path = make_pdf(it, article_text)
+              pdf_path = make_pdf(it, real_url, article_text)
 
               safe_title = re.sub(r'[\\/*?:"<>|]', "", title)[:80]
               filename = f"{(iso or '')[:10]} - {safe_title}.pdf"
