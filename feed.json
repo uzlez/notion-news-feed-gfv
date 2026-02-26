@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-26T02:30:27.717987+00:00",
+  "generatedAt": "2026-02-26T04:53:46.309021+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -30,6 +30,16 @@
       "pubDateISO": "2026-02-20T23:27:42+00:00",
       "snippet": "Ukrainian Deftech Startup MaXon Secures Investment from Green Flag Ventures Scroll.media",
       "query": "\"Green Flag Ventures\""
+    },
+    {
+      "headline": "Mirai Tech receives $10 million in investment and wants to move AI work from servers to smartphones and laptops",
+      "source": "dev.ua",
+      "source_url": "https://dev.ua",
+      "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxNbHUyNmplcmZWcDhTSVgtWWNkSTFQWkJ3X1BueWVxbV9xYkZsa1BxMUlLcmRPVUp6R2p3UGF5aVhQX1dVQkZWODRmRnpvbG9aemZoc0E3WThYR241b3hfdy1Vb1FpbTBGWE5ka3ZvYUF2Z2xnakxQUnk4ZGwxWVVvVmUwNnF0NDE5ekk0VFpjTEc1bG5QQ1h4YXN1STF6d1RXU2ZUdjRrc01vOHcteVpCRkpIVmppUlYzazhPYUdtbEJyRFR3R0JPbWNSTDV4SnI1b1ZN?oc=5",
+      "pubDate": "Fri, 20 Feb 2026 13:17:00 GMT",
+      "pubDateISO": "2026-02-20T13:17:00+00:00",
+      "snippet": "Mirai Tech receives $10 million in investment and wants to move AI work from servers to smartphones and laptops dev.ua",
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
       "headline": "Investment in Ukrainian defense tech tops $100 million in 2025",
@@ -159,16 +169,6 @@
       "pubDate": "Mon, 29 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-29T07:00:00+00:00",
       "snippet": "11 Startups Secure Over $2.8M at IT Arena 2025 Scroll.media",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
-    {
-      "headline": "The largest investment in a Ukrainian military tech startup since the start of the war: Swarmer, which develops drone swarm technology, has raised $15M.",
-      "source": "ubn.news",
-      "source_url": "https://ubn.news",
-      "link": "https://news.google.com/rss/articles/CBMi-AFBVV95cUxOSlowQzBzQkVOOXFEdDBTb215eW4wdWNWdDJEWlRuOXk5emdkTGxxNkI2ZW5iNWw2UFoyZ0h1THRPQTNxcW1tMHJDRy1rdVp3MEdRRW9qV3dLV01Rem1GV2lhanhhNURSSTh1QWk5UUsySFF0azctVW9XbEx2NFg1VGdLRmxhR2EzYlBzU3AwMGMyNGhtS2ZGQUE3N09ZZUhSU1NlRm5LODJMNExQaE1VbGlVN0NhNUU2SzRBeF9kQWRjVTItazRZbi1DRW13SHZXZW9GVUFva2ZIZ1JDSVFiMWR5MXdZLTBHVElET2lnbHphNC02dHVSZ9IBgAJBVV95cUxQQk45eG40RF9lZmFCWVVDcHc2RGQ5anpXREtOUzlGUVlleElXcW1LU0ZrV1Bsb01fSGVvSHRZbzVZR21uS0g4UWwtOGtLZER6Y2UxWmZtNlQ2RVJhR2V1ZmhKWEpwSm9RUkV0UUNOREk5ajFnN1JGQUlCOHBWX0FYYTUzWjNfbG0tU3BLcmMyelhGbzYxMUVOcDU2Mmlic2o4RHZGTERFWnpGTzNpakpPc3pWMHJMckhucGpwSzMwMmh3ZUVnUlhCWl9taFFjVHdQb1J6M2h2Ynh0SjRZUUdCNVk3TkJKVnRsRGpiYVNwQ2FnLXZXcjkwc1dHbFV3WUh3?oc=5",
-      "pubDate": "Wed, 17 Sep 2025 07:00:00 GMT",
-      "pubDateISO": "2025-09-17T07:00:00+00:00",
-      "snippet": "The largest investment in a Ukrainian military tech startup since the start of the war: Swarmer, which develops drone swarm technology, has raised $15M. ubn.news",
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
