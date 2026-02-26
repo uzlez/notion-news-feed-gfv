@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-26T15:57:24.481224+00:00",
+  "generatedAt": "2026-02-26T17:09:27.584614+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -32,13 +32,23 @@
       "query": "\"Green Flag Ventures\""
     },
     {
+      "headline": "Mirai Tech receives $10 million in investment and wants to move AI work from servers to smartphones and laptops",
+      "source": "dev.ua",
+      "source_url": "https://dev.ua",
+      "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxNbHUyNmplcmZWcDhTSVgtWWNkSTFQWkJ3X1BueWVxbV9xYkZsa1BxMUlLcmRPVUp6R2p3UGF5aVhQX1dVQkZWODRmRnpvbG9aemZoc0E3WThYR241b3hfdy1Vb1FpbTBGWE5ka3ZvYUF2Z2xnakxQUnk4ZGwxWVVvVmUwNnF0NDE5ekk0VFpjTEc1bG5QQ1h4YXN1STF6d1RXU2ZUdjRrc01vOHcteVpCRkpIVmppUlYzazhPYUdtbEJyRFR3R0JPbWNSTDV4SnI1b1ZN?oc=5",
+      "pubDate": "Fri, 20 Feb 2026 13:17:00 GMT",
+      "pubDateISO": "2026-02-20T13:17:00+00:00",
+      "snippet": "Mirai Tech receives $10 million in investment and wants to move AI work from servers to smartphones and laptops dev.ua",
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
+    },
+    {
       "headline": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures",
-      "source": "Dev.ua",
+      "source": "dev.ua",
       "source_url": "https://dev.ua",
       "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9oc3dHWS1kQlVSVDZIRUxHakpSZy1lVXllclF2YzRPMnBoUFh2SlZqNW56c3lpUTE4MnRUNWhRdVIxZDR6OFVlR1lQR1RsSnJSb094bEhtb1E2bW9EaU5OT1UwbEFfdG40Ulg4?oc=5",
       "pubDate": "Fri, 20 Feb 2026 09:08:00 GMT",
       "pubDateISO": "2026-02-20T09:08:00+00:00",
-      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures Dev.ua",
+      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures dev.ua",
       "query": "\"Green Flag Ventures\""
     },
     {
@@ -243,12 +253,12 @@
     },
     {
       "headline": "Ukrainian defense startup Falcons has attracted investment from the American fund Green Flag Ventures",
-      "source": "Dev.ua",
+      "source": "dev.ua",
       "source_url": "https://dev.ua",
       "link": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9tdGRsbHhvZlRtRmFqYjMzSWJJRUJGQ1lwV3dLZDFHSzJhbm8tMWdLa2xSa0dzMlNYMzloZ3dVOWtheTRxQWVzYVEyUGR2dzE4QXFn?oc=5",
       "pubDate": "Fri, 12 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-12T07:00:00+00:00",
-      "snippet": "Ukrainian defense startup Falcons has attracted investment from the American fund Green Flag Ventures Dev.ua",
+      "snippet": "Ukrainian defense startup Falcons has attracted investment from the American fund Green Flag Ventures dev.ua",
       "query": "\"Green Flag Ventures\""
     },
     {
