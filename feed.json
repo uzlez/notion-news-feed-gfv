@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-02-26T11:42:32.205561+00:00",
+  "generatedAt": "2026-02-26T13:16:53.169687+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
       "source": "Kyiv Post",
       "source_url": "https://www.kyivpost.com",
       "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE05UXhEWUl0N2pRM3lzY3pxcWs4a1JIdFdFQWJsSTY1eFdTTlZLdE43RHFxWWMwdVVoUWZydU9fYnNQTFZfVlRsVTlibw?oc=5",
-      "pubDate": "Mon, 23 Feb 2026 20:10:54 GMT",
-      "pubDateISO": "2026-02-23T20:10:54+00:00",
+      "pubDate": "Wed, 25 Feb 2026 13:41:34 GMT",
+      "pubDateISO": "2026-02-25T13:41:34+00:00",
       "snippet": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon Kyiv Post",
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
@@ -122,6 +122,16 @@
       "query": "\"Green Flag Ventures\""
     },
     {
+      "headline": "Ukraine’s Drone War Over the Black Sea Is Heating Up",
+      "source": "The National Interest",
+      "source_url": "https://nationalinterest.org",
+      "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOMDRiYk94bTZnSGJTVGdZeU5EZW8wT0xaQWpxWlRfcDBTWGJqemtZS09fTGJKS0lfakhVd3REWTk2TWhTLWVkRUM3NEp4ZFk2aDkzc2NXcTVGVUZubUQ0R28wdmk5ZnRob0hFeDh1WjM5a0oxTk5JdjVPZGJhS0dDVHV2TEFWdjltOEZWWmh5cnBmZw?oc=5",
+      "pubDate": "Tue, 14 Oct 2025 07:00:00 GMT",
+      "pubDateISO": "2025-10-14T07:00:00+00:00",
+      "snippet": "Ukraine’s Drone War Over the Black Sea Is Heating Up The National Interest",
+      "query": "\"Deborah Fairlamb\""
+    },
+    {
       "headline": "A Desperate Race for Drone Defenses",
       "source": "Center for European Policy Analysis (CEPA)",
       "source_url": "https://cepa.org",
@@ -150,16 +160,6 @@
       "pubDateISO": "2025-09-29T07:00:00+00:00",
       "snippet": "11 Startups Secure Over $2.8M at IT Arena 2025 Scroll.media",
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
-    {
-      "headline": "Interview: Why Green Flag Ventures Is On the Ground In Ukraine",
-      "source": "Resilience Media",
-      "source_url": "https://resiliencemedia.co",
-      "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOeGVURHdDczhYYnQxUVdZeEliMW1mRE91eHBDS05zZnFEclNXSEZjQWFZUXJOWU1XSThXeHhHdVpBQUljVi1RNnZyZHd6QXFCRkZ2aS1TT0xQaTRVVVRydzRmLUd0dmtYdnRMMjJmWm1QeVJNLV9NXzJMcmsteTFJLTRMZURBSVdUUDk5dU93ejhicmc?oc=5",
-      "pubDate": "Fri, 19 Sep 2025 07:00:00 GMT",
-      "pubDateISO": "2025-09-19T07:00:00+00:00",
-      "snippet": "Interview: Why Green Flag Ventures Is On the Ground In Ukraine Resilience Media",
-      "query": "\"Green Flag Ventures\""
     },
     {
       "headline": "Swarmer raises $15M — Record for Ukrainian Defense Tech",
