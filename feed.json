@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-25T23:32:30.710300+00:00",
+  "generatedAt": "2026-02-26T02:30:27.717987+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -29,16 +29,6 @@
       "pubDate": "Fri, 20 Feb 2026 23:27:42 GMT",
       "pubDateISO": "2026-02-20T23:27:42+00:00",
       "snippet": "Ukrainian Deftech Startup MaXon Secures Investment from Green Flag Ventures Scroll.media",
-      "query": "\"Green Flag Ventures\""
-    },
-    {
-      "headline": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures",
-      "source": "dev.ua",
-      "source_url": "https://dev.ua",
-      "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9oc3dHWS1kQlVSVDZIRUxHakpSZy1lVXllclF2YzRPMnBoUFh2SlZqNW56c3lpUTE4MnRUNWhRdVIxZDR6OFVlR1lQR1RsSnJSb094bEhtb1E2bW9EaU5OT1UwbEFfdG40Ulg4?oc=5",
-      "pubDate": "Fri, 20 Feb 2026 09:08:00 GMT",
-      "pubDateISO": "2026-02-20T09:08:00+00:00",
-      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures dev.ua",
       "query": "\"Green Flag Ventures\""
     },
     {
@@ -80,6 +70,16 @@
       "pubDateISO": "2025-11-21T08:00:00+00:00",
       "snippet": "How to prepare for arms exports. A checklist for founders of Defense Tech startups en.ain.ua",
       "query": "\"Deborah Fairlamb\""
+    },
+    {
+      "headline": "SOC Prime attracts investment from u.ventures for AI solutions in cybersecurity",
+      "source": "en.ain.ua",
+      "source_url": "https://en.ain.ua",
+      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5lWkF5cUh0VXpzTnllNTcwSElpRWtCVXozNjdkLU9Yd0pka1JDNk8yeHVnVmwtSlBjc0tzbzI4QzlRMHliQ0dMUFRkYkxPZWl4SVhEdXJZd1FQUkxPaXlLem1IazVENkg2VW15Zw?oc=5",
+      "pubDate": "Thu, 20 Nov 2025 08:00:00 GMT",
+      "pubDateISO": "2025-11-20T08:00:00+00:00",
+      "snippet": "SOC Prime attracts investment from u.ventures for AI solutions in cybersecurity en.ain.ua",
+      "query": "\"Green Flag Ventures\""
     },
     {
       "headline": "At Ukraine’s Top Tech Event, Faster and Cheaper Rule",
