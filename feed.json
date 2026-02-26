@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-26T08:55:04.338667+00:00",
+  "generatedAt": "2026-02-26T09:55:43.505851+00:00",
   "items": [
     {
       "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
@@ -72,16 +72,6 @@
       "query": "\"Deborah Fairlamb\""
     },
     {
-      "headline": "SOC Prime attracts investment from u.ventures for AI solutions in cybersecurity",
-      "source": "en.ain.ua",
-      "source_url": "https://en.ain.ua",
-      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5lWkF5cUh0VXpzTnllNTcwSElpRWtCVXozNjdkLU9Yd0pka1JDNk8yeHVnVmwtSlBjc0tzbzI4QzlRMHliQ0dMUFRkYkxPZWl4SVhEdXJZd1FQUkxPaXlLem1IazVENkg2VW15Zw?oc=5",
-      "pubDate": "Thu, 20 Nov 2025 08:00:00 GMT",
-      "pubDateISO": "2025-11-20T08:00:00+00:00",
-      "snippet": "SOC Prime attracts investment from u.ventures for AI solutions in cybersecurity en.ain.ua",
-      "query": "\"Green Flag Ventures\""
-    },
-    {
       "headline": "At Ukraine’s Top Tech Event, Faster and Cheaper Rule",
       "source": "IEEE Spectrum",
       "source_url": "https://spectrum.ieee.org",
@@ -122,6 +112,16 @@
       "query": "\"Green Flag Ventures\""
     },
     {
+      "headline": "Ukraine’s Drone War Over the Black Sea Is Heating Up",
+      "source": "The National Interest",
+      "source_url": "https://nationalinterest.org",
+      "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOMDRiYk94bTZnSGJTVGdZeU5EZW8wT0xaQWpxWlRfcDBTWGJqemtZS09fTGJKS0lfakhVd3REWTk2TWhTLWVkRUM3NEp4ZFk2aDkzc2NXcTVGVUZubUQ0R28wdmk5ZnRob0hFeDh1WjM5a0oxTk5JdjVPZGJhS0dDVHV2TEFWdjltOEZWWmh5cnBmZw?oc=5",
+      "pubDate": "Tue, 14 Oct 2025 07:00:00 GMT",
+      "pubDateISO": "2025-10-14T07:00:00+00:00",
+      "snippet": "Ukraine’s Drone War Over the Black Sea Is Heating Up The National Interest",
+      "query": "\"Deborah Fairlamb\""
+    },
+    {
       "headline": "A Desperate Race for Drone Defenses",
       "source": "Center for European Policy Analysis (CEPA)",
       "source_url": "https://cepa.org",
@@ -159,7 +159,7 @@
       "pubDate": "Fri, 19 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-19T07:00:00+00:00",
       "snippet": "Interview: Why Green Flag Ventures Is On the Ground In Ukraine Resilience Media",
-      "query": "\"Deborah Fairlamb\""
+      "query": "\"Green Flag Ventures\""
     },
     {
       "headline": "Swarmer raises $15M — Record for Ukrainian Defense Tech",
