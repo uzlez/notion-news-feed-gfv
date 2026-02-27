@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-27T18:52:02.014174+00:00",
+  "generatedAt": "2026-02-27T19:36:18.240322+00:00",
   "items": [
     {
       "headline": "Ukrainian MaXon Systems Secures Investment from U.S.-Based Green Flag Ventures",
@@ -30,16 +30,6 @@
       "pubDateISO": "2026-02-20T13:17:00+00:00",
       "snippet": "Mirai Tech receives $10 million in investment and wants to move AI work from servers to smartphones and laptops dev.ua",
       "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
-    {
-      "headline": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures",
-      "source": "dev.ua",
-      "source_url": "https://dev.ua",
-      "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9oc3dHWS1kQlVSVDZIRUxHakpSZy1lVXllclF2YzRPMnBoUFh2SlZqNW56c3lpUTE4MnRUNWhRdVIxZDR6OFVlR1lQR1RsSnJSb094bEhtb1E2bW9EaU5OT1UwbEFfdG40Ulg4?oc=5",
-      "pubDate": "Fri, 20 Feb 2026 09:08:00 GMT",
-      "pubDateISO": "2026-02-20T09:08:00+00:00",
-      "snippet": "Ukrainian defense tech company MaXon Systems has attracted investment from the American fund Green Flag Ventures dev.ua",
-      "query": "\"Green Flag Ventures\""
     },
     {
       "headline": "Investment in Ukrainian defense tech tops $100 million in 2025",
@@ -209,6 +199,16 @@
       "pubDate": "Mon, 15 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-15T07:00:00+00:00",
       "snippet": "Ukrainian Startup Falcons Secures Investment from U.S. Fund Green Flag Ventures Inventure.com.ua",
+      "query": "\"Green Flag Ventures\""
+    },
+    {
+      "headline": "Falcons, a Ukrainian defense startup, has attracted investment from an American fund.",
+      "source": "ubn.news",
+      "source_url": "https://ubn.news",
+      "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNREVsam9vZ05xbWJ5LTRDdmctNEZnS2YwbjJMYWV1dkNVdllieGcyWmtZQVBuQ3I5TnZ6OHByamRLcWczS1dEb3dkc0dwM0JzdDhwNGhxaC1xNmJ6T1k2dVpwejNpWjduYVdMdUJRM2RYRzZ5d2wyMUtqTURQRWowWlItdkJDdXozNlVITGFwalpmYks2dzRJN043SWdKNER2NEHSAaoBQVVfeXFMTnhZVk9HRjN3d3N3VjRPVnd2S2RMelVyMFBXendob1p4YS1DNVlrNGdENm56TWdQSEhZVS1hdmVBNDNLWUtVU1M3QU5ZYklpZmxNRkxNNWNzVXdvTlVndUdpS2xJM3JiQ251Tk1lMGpyWlRMZFlfOEpOQjhJSnVmRTlxYjgxeUpvZGhIdDZYQ0NzTDN3WDJFZHN4anRJZjF3QW9ubl91S1FrdFE?oc=5",
+      "pubDate": "Sun, 14 Sep 2025 21:55:04 GMT",
+      "pubDateISO": "2025-09-14T21:55:04+00:00",
+      "snippet": "Falcons, a Ukrainian defense startup, has attracted investment from an American fund. ubn.news",
       "query": "\"Green Flag Ventures\""
     },
     {
