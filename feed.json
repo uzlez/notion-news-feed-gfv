@@ -1,16 +1,6 @@
 {
-  "generatedAt": "2026-02-27T13:08:21.998147+00:00",
+  "generatedAt": "2026-02-27T14:42:28.855230+00:00",
   "items": [
-    {
-      "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
-      "source": "Kyiv Post",
-      "source_url": "https://www.kyivpost.com",
-      "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE05UXhEWUl0N2pRM3lzY3pxcWs4a1JIdFdFQWJsSTY1eFdTTlZLdE43RHFxWWMwdVVoUWZydU9fYnNQTFZfVlRsVTlibw?oc=5",
-      "pubDate": "Wed, 25 Feb 2026 13:41:34 GMT",
-      "pubDateISO": "2026-02-25T13:41:34+00:00",
-      "snippet": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon Kyiv Post",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
     {
       "headline": "Ukrainian MaXon Systems Secures Investment from U.S.-Based Green Flag Ventures",
       "source": "Inventure.com.ua",
@@ -200,6 +190,16 @@
       "pubDateISO": "2025-09-15T07:00:00+00:00",
       "snippet": "Ukrainian Startup Falcons Secures Investment from U.S. Fund Green Flag Ventures Inventure.com.ua",
       "query": "\"Green Flag Ventures\""
+    },
+    {
+      "headline": "Falcons, a Ukrainian defense startup, has attracted investment from an American fund.",
+      "source": "ubn.news",
+      "source_url": "https://ubn.news",
+      "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNREVsam9vZ05xbWJ5LTRDdmctNEZnS2YwbjJMYWV1dkNVdllieGcyWmtZQVBuQ3I5TnZ6OHByamRLcWczS1dEb3dkc0dwM0JzdDhwNGhxaC1xNmJ6T1k2dVpwejNpWjduYVdMdUJRM2RYRzZ5d2wyMUtqTURQRWowWlItdkJDdXozNlVITGFwalpmYks2dzRJN043SWdKNER2NEHSAaoBQVVfeXFMTnhZVk9HRjN3d3N3VjRPVnd2S2RMelVyMFBXendob1p4YS1DNVlrNGdENm56TWdQSEhZVS1hdmVBNDNLWUtVU1M3QU5ZYklpZmxNRkxNNWNzVXdvTlVndUdpS2xJM3JiQ251Tk1lMGpyWlRMZFlfOEpOQjhJSnVmRTlxYjgxeUpvZGhIdDZYQ0NzTDN3WDJFZHN4anRJZjF3QW9ubl91S1FrdFE?oc=5",
+      "pubDate": "Sun, 14 Sep 2025 21:55:04 GMT",
+      "pubDateISO": "2025-09-14T21:55:04+00:00",
+      "snippet": "Falcons, a Ukrainian defense startup, has attracted investment from an American fund. ubn.news",
+      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
     },
     {
       "headline": "Ukrainian Direction-Finding Tech Firm Falcons Secures U.S. Investment for Scaling",
