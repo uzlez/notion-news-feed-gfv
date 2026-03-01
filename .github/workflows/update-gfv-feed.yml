@@ -110,14 +110,23 @@ jobs:
                       "query": q,
                   })
 
-          seen = set()
+          # ── PATCHED: deduplicate by BOTH url AND normalised title ──────────────
+          # Google News returns the same article with multiple redirect URLs
+          # (e.g. rss...B?oc=5, rss...n?oc=5) so URL-only dedup misses them.
+          seen_urls   = set()
+          seen_titles = set()
           out = []
           for x in sorted(items, key=lambda z: z["pubDateISO"], reverse=True):
-              key = x["link"]
-              if key in seen: continue
-              seen.add(key)
+              url_key   = x["link"]
+              title_key = re.sub(r"\s+", " ", x["headline"].lower()).strip()
+              if url_key in seen_urls or title_key in seen_titles:
+                  continue
+              seen_urls.add(url_key)
+              seen_titles.add(title_key)
               out.append(x)
-              if len(out) >= MAX_ITEMS: break
+              if len(out) >= MAX_ITEMS:
+                  break
+          # ── END PATCH ───────────────────────────────────────────────────────────
 
           payload = {"generatedAt": datetime.now(timezone.utc).isoformat(), "items": out}
           with open("feed.json", "w", encoding="utf-8") as f:
@@ -166,20 +175,11 @@ jobs:
               return (s or "").strip().strip('"').strip("'").replace("\n","").replace("\r","").replace("\t","").strip()
 
           def try_fetch_article(source_url, headline, scraper_key):
-              """
-              Try to find and fetch the real article from the publisher's site.
-              Uses ScraperAPI to search the source domain for the headline.
-              Returns (real_url, article_text) or ("", "").
-              """
               if not source_url or not scraper_key:
                   return "", ""
-
-              # Build a site-specific Google search URL
               domain = re.sub(r"https?://", "", source_url).rstrip("/")
-              # Take first 6 words of headline for search
               keywords = " ".join(headline.split()[:6])
               search_url = f"https://www.google.com/search?q=site:{domain}+{requests.utils.quote(keywords)}"
-
               try:
                   resp = requests.get(
                       "https://api.scraperapi.com",
@@ -188,24 +188,16 @@ jobs:
                   )
                   if resp.status_code != 200:
                       return "", ""
-
-                  # Find article URLs in Google search results
                   matches = re.findall(
                       rf'href="(https?://{re.escape(domain)}/[^"]+)"',
                       resp.text
                   )
                   if not matches:
-                      # Try without domain filter
                       matches = re.findall(r'/url\?q=(https?://[^&"]+)', resp.text)
-
                   if not matches:
                       return "", ""
-
-                  # Take the first plausible article URL
                   article_url = matches[0]
                   article_url = urllib.parse.unquote(article_url) if "%3A" in article_url else article_url
-
-                  # Now fetch that article
                   resp2 = requests.get(
                       "https://api.scraperapi.com",
                       params={"api_key": scraper_key, "url": article_url, "render": "false"},
@@ -220,10 +212,8 @@ jobs:
                       ) or ""
                       if text.strip():
                           return article_url, text.strip()
-
               except Exception as e:
                   print(f"  Article fetch error: {e}")
-
               return "", ""
 
           def build_drive_service(sa_json):
@@ -250,38 +240,32 @@ jobs:
               pdf.add_font("DejaVuBold", "", FONT_BOLD)
               pdf.add_page()
 
-              # ── Header ──
               pdf.set_fill_color(20, 40, 80)
               pdf.rect(0, 0, 210, 22, "F")
               pdf.set_font("DejaVuBold", "", 11)
               pdf.set_text_color(255, 255, 255)
               pdf.set_xy(10, 4)
               pdf.cell(130, 7, "GFV News Archive", new_x=XPos.RIGHT, new_y=YPos.TOP)
-              # Date top-right
               pdf.set_font("DejaVu", "", 9)
               pdf.set_text_color(180, 200, 230)
               pdf.set_xy(140, 4)
               pdf.cell(60, 7, item.get("pubDate","")[:16], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-              # Source sub-header
               pdf.set_font("DejaVu", "", 9)
               pdf.set_text_color(160, 185, 220)
               pdf.set_xy(10, 13)
               pdf.cell(0, 6, item.get("source",""), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
               pdf.ln(10)
 
-              # ── Headline ──
               add_text(pdf, item.get("headline") or "Untitled",
                        bold=True, size=16, color=(10,10,40), width=68, lh=9)
               pdf.ln(6)
 
-              # ── Divider ──
               pdf.set_draw_color(20, 40, 80)
               pdf.set_line_width(0.5)
               pdf.line(10, pdf.get_y(), 50, pdf.get_y())
               pdf.set_line_width(0.2)
               pdf.ln(6)
 
-              # ── URL ──
               display_url = real_url if real_url else item.get("source_url","")
               if display_url:
                   pdf.set_font("DejaVuBold", "", 8)
@@ -293,7 +277,6 @@ jobs:
                   pdf.cell(0, 5, url_line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                   pdf.ln(4)
 
-              # ── Content ──
               pdf.set_draw_color(230, 230, 230)
               pdf.line(10, pdf.get_y(), 200, pdf.get_y())
               pdf.ln(5)
@@ -303,7 +286,6 @@ jobs:
               else:
                   snippet = (item.get("snippet") or "").strip()
                   if snippet:
-                      # Show snippet in a light box
                       pdf.set_fill_color(248, 249, 252)
                       y_before = pdf.get_y()
                       pdf.set_font("DejaVu", "", 10)
@@ -325,14 +307,12 @@ jobs:
                       pdf.cell(0, 6, "No preview available — open the source URL to read the full article.",
                                new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-              # ── Query tag ──
               pdf.ln(6)
               pdf.set_font("DejaVu", "", 7)
               pdf.set_text_color(160, 160, 160)
               pdf.cell(0, 5, f"Matched query: {item.get('query','')}",
                        new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
-              # ── Footer ──
               pdf.set_y(-14)
               pdf.set_draw_color(200, 200, 200)
               pdf.line(10, pdf.get_y(), 200, pdf.get_y())
@@ -393,7 +373,9 @@ jobs:
           with open("feed.json","r",encoding="utf-8") as f:
               items = json.load(f).get("items",[])
 
-          existing_urls = set()
+          # ── PATCHED: collect existing URLs AND titles from Notion ────────────
+          existing_urls   = set()
+          existing_titles = set()
           cursor = None
           for _ in range(50):
               body = {"page_size": 100}
@@ -404,18 +386,35 @@ jobs:
                   raise RuntimeError(f"Notion query failed: {r.status_code}\n{r.text}")
               data = r.json()
               for page in data.get("results",[]):
-                  u = (page.get("properties",{}).get("URL",{}) or {}).get("url")
-                  if u: existing_urls.add(u)
+                  props = page.get("properties", {})
+                  # Collect existing URL
+                  u = (props.get("URL", {}) or {}).get("url")
+                  if u:
+                      existing_urls.add(u)
+                  # Collect existing title (normalised)
+                  title_parts = (props.get("Name", {}) or {}).get("title") or []
+                  if title_parts:
+                      t = (title_parts[0].get("plain_text") or "").lower().strip()
+                      t = re.sub(r"\s+", " ", t)
+                      if t:
+                          existing_titles.add(t)
               if not data.get("has_more"): break
               cursor = data.get("next_cursor")
+
+          print(f"Existing in Notion: {len(existing_urls)} URLs, {len(existing_titles)} titles")
+          # ── END PATCH ────────────────────────────────────────────────────────
 
           created = 0
           for it in items:
               url = it.get("link")
-              if not url or url in existing_urls:
-                  continue
+              title = (it.get("headline") or "Untitled")[:180]
 
-              title      = (it.get("headline") or "Untitled")[:180]
+              # ── PATCHED: skip if URL or title already exists ─────────────────
+              title_key = re.sub(r"\s+", " ", title.lower()).strip()
+              if not url or url in existing_urls or title_key in existing_titles:
+                  continue
+              # ── END PATCH ────────────────────────────────────────────────────
+
               source     = (it.get("source") or "")[:200]
               source_url = it.get("source_url","")
               query      = (it.get("query") or "")[:200]
@@ -423,7 +422,6 @@ jobs:
 
               print(f"\n  Processing: {title[:70]}...")
 
-              # Try to get full article via ScraperAPI + source domain search
               real_url, article_text = try_fetch_article(source_url, title, scraper_key)
               if article_text:
                   print(f"  ✓ Got {len(article_text)} chars from {real_url[:60]}")
@@ -460,7 +458,11 @@ jobs:
               if c.status_code != 200:
                   raise RuntimeError(f"Notion create failed: {c.status_code}\n{c.text}")
 
+              # ── PATCHED: track both URL and title after insert ───────────────
               existing_urls.add(url)
+              existing_titles.add(title_key)
+              # ── END PATCH ────────────────────────────────────────────────────
+
               created += 1
               print(f"  ✓ Row created | PDF: {drive_url or 'none'}")
               time.sleep(0.5)
