@@ -1,16 +1,6 @@
 {
-  "generatedAt": "2026-03-01T10:32:24.396992+00:00",
+  "generatedAt": "2026-03-01T11:25:17.770507+00:00",
   "items": [
-    {
-      "headline": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon",
-      "source": "Kyiv Post",
-      "source_url": "https://www.kyivpost.com",
-      "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE05UXhEWUl0N2pRM3lzY3pxcWs4a1JIdFdFQWJsSTY1eFdTTlZLdE43RHFxWWMwdVVoUWZydU9fYnNQTFZfVlRsVTlibw?oc=5",
-      "pubDate": "Wed, 25 Feb 2026 13:41:34 GMT",
-      "pubDateISO": "2026-02-25T13:41:34+00:00",
-      "snippet": "US-based Fund Invests in Ukrainian Anti-Drone Solutions Developer MaXon Kyiv Post",
-      "query": "(\"Green Flag Ventures\" OR \"Justin Zeefe\" OR \"Deborah Fairlamb\" OR GFV) (venture OR VC OR fund OR investment OR portfolio OR backs OR backed OR led OR seed)"
-    },
     {
       "headline": "Ukrainian MaXon Systems Secures Investment from U.S.-Based Green Flag Ventures",
       "source": "Inventure.com.ua",
@@ -115,7 +105,7 @@
       "headline": "The Latest Buzzy Tech Investment: Ukrainian Drones",
       "source": "WSJ",
       "source_url": "https://www.wsj.com",
-      "link": "https://news.google.com/rss/articles/CBMilgNBVV95cUxNaWFxYmR4OXdOX2RhUlZKa2hTZUNlby1qR2ktaVF5MFd4UkQ2aGIwLXEtX05pbk9PLUJjQUlVV3FjamZVVXVlVjZlRWhRMmdSdTlRcGF0U1ZKY3c5SXIzUXpqWldudE5CUTRlUUUyTUNWRnBqbGd4SGV2b2NaTVk5VWdGeTN0TzNYQWNIeGhBWUQ0NlZKNFBraHZyaElUaXh0S0xEM3FObkd6VWYtV1BWQTlVWmxIYXhxNENVTUliZ2xKQ2VRbkR6a3ZqbnAxOUxPVUt5TjZJa0ZZSC1BSEZrQy1rY3pnUU5TZEJJU3M4ZjRtVmxMVTk2aTYzLThTdlNoYlQzMHY3dzNBN3pqTk9UZW1semxuU3RKYlI1dE9zRHo3blJwUEtNd0x1d2stYTVEbEdoSXp2R05mLVFfQmtsUU5MZ3paN28wUFlwQkR2c2NYX3JPc1hsQUJKQXlpNUc5QnV0TzFodEFiQlNZdTh4eWlJYl9IYnlyQTlMYVA0ZGhxS0pvZjY0QXdlUjluZXR6TlZRMDZB?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMilgNBVV95cUxOR0NSVzMzeTJ0M25raUdMQmNibDJiMVppbUFyR0NtUUdGT3VEdENCelNPQVhNblpXbzVJTzdrUmRLTHFiZW51c2RkLXF5TlhudTg1SEVkUEhCbFdHSGc3WHAweGd1MzQ2S25fZjZvLXVCWXRzX0p4LUJ6VlMycTJKZ19lbm5NMDBzNEN0eFp0alI0VllMTC1jYzVINVR1ZGdpakJtRndhbXBUZkZxd215VUo1R2lNdlhfa3lfZV9KN2hSMUdNd2h6UkxnS0V2MmRja0MyeUJSSmVKY3Jhc05pTzU2VkN5Z19PRkl3Y0F1YzBRODlZbnFaLVNSYU51c2pFLVBiTDAwZEd6MUdieEJHcHYzb21sZ29udHJTa1NMUDNWWXdVR3d2aFhhZkYwMlJPdEdVOFRWeWxQOFpVR1ROQmZxRnJSdXNyQW1fcy1BVlF3Y25jVzIwdUhZd1ZQOW9LWFFHbWprNzRmWkc1a01UZkZnR29VZWsyVE91bEhzSE04R0ZoWkU4bmdBR24tRWY2M1ZlTi1n?oc=5",
       "pubDate": "Sat, 01 Nov 2025 07:00:00 GMT",
       "pubDateISO": "2025-11-01T07:00:00+00:00",
       "snippet": "The Latest Buzzy Tech Investment: Ukrainian Drones WSJ",
@@ -252,6 +242,16 @@
       "query": "\"Green Flag Ventures\""
     },
     {
+      "headline": "Ukrainian defense startup Falcons secures US funding to scale electronic warfare system",
+      "source": "Tech.eu",
+      "source_url": "https://tech.eu",
+      "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOVExRaktXZ3JzdTZwQ1lHQllIREQ1RkxHMWlRdDQyaUhCT3doTUZqdEpmM2FfZWR4am1pVGhEa0Q4STdwZUJJOVVNeFBtUDVGMnRTR2JhQW9FdXVXLWw1T0xVTFVnSFZsR3phajRfamNQbmhFSWtyMnREWi16QlMycWZkemVKdXY4VjVZdjFxZTVtYmtvb2hCSE8xT0IyM0dCT1VDdWtnU0d2dF9ySlp1WldoUm9mQQ?oc=5",
+      "pubDate": "Fri, 12 Sep 2025 07:00:00 GMT",
+      "pubDateISO": "2025-09-12T07:00:00+00:00",
+      "snippet": "Ukrainian defense startup Falcons secures US funding to scale electronic warfare system Tech.eu",
+      "query": "\"Green Flag Ventures\""
+    },
+    {
       "headline": "CEE Startup & Tech Weekly: Albania Becomes First Country to Appoint Virtual AI Minister",
       "source": "The Recursive",
       "source_url": "https://therecursive.com",
@@ -269,16 +269,6 @@
       "pubDate": "Fri, 12 Sep 2025 07:00:00 GMT",
       "pubDateISO": "2025-09-12T07:00:00+00:00",
       "snippet": "Ukrainian defense startup Falcons has attracted investment from the American fund Green Flag Ventures dev.ua",
-      "query": "\"Green Flag Ventures\""
-    },
-    {
-      "headline": "Ukrainian defense startup Falcons secures US funding to scale electronic warfare system",
-      "source": "Tech.eu",
-      "source_url": "https://tech.eu",
-      "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOVExRaktXZ3JzdTZwQ1lHQllIREQ1RkxHMWlRdDQyaUhCT3doTUZqdEpmM2FfZWR4am1pVGhEa0Q4STdwZUJJOVVNeFBtUDVGMnRTR2JhQW9FdXVXLWw1T0xVTFVnSFZsR3phajRfamNQbmhFSWtyMnREWi16QlMycWZkemVKdXY4VjVZdjFxZTVtYmtvb2hCSE8xT0IyM0dCT1VDdWtnU0d2dF9ySlp1WldoUm9mQQ?oc=5",
-      "pubDate": "Fri, 12 Sep 2025 07:00:00 GMT",
-      "pubDateISO": "2025-09-12T07:00:00+00:00",
-      "snippet": "Ukrainian defense startup Falcons secures US funding to scale electronic warfare system Tech.eu",
       "query": "\"Green Flag Ventures\""
     },
     {
